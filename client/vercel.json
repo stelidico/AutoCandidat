@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://REMPLACER_PAR_URL_RAILWAY/api/:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "https://REMPLACER_PAR_URL_RAILWAY/auth/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

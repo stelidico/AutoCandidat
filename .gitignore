@@ -1,0 +1,20 @@
+node_modules/
+.env
+
+# SQLite database files
+server/data/*.db
+server/data/*.db-wal
+server/data/*.db-shm
+
+# Temp uploads
+server/uploads/
+
+# Logs
+server/logs/
+
+# Frontend build
+client/dist/
+
+# OS
+.DS_Store
+Thumbs.db
