@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REMPLACER_PAR_URL_RAILWAY/api/:path*"
+      "destination": "https://autocandidat-api.fly.dev/api/:path*"
     },
     {
       "source": "/auth/:path*",
-      "destination": "https://REMPLACER_PAR_URL_RAILWAY/auth/:path*"
+      "destination": "https://autocandidat-api.fly.dev/auth/:path*"
     },
     {
       "source": "/(.*)",
