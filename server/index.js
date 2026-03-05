@@ -1,3 +1,16 @@
+// ─── Capture crashes au démarrage ────────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('[CRASH] uncaughtException:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[CRASH] unhandledRejection:', reason);
+  process.exit(1);
+});
+
+console.log('[BOOT] Starting server...');
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -6,11 +19,18 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 
 dotenv.config();
+console.log('[BOOT] env PORT =', process.env.PORT);
 
 const logger = require('./logger');
+console.log('[BOOT] logger OK');
+
 const { startWorker } = require('./worker');
+console.log('[BOOT] worker OK');
 
 const app = express();
+
+// ─── Health check (avant tout middleware pour Railway) ────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ─── Security middleware ──────────────────────────────────────────────────────
 app.use(helmet());
@@ -62,6 +82,7 @@ app.use((err, req, res, _next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
+  console.log(`[BOOT] Server listening on port ${port}`);
   logger.info(`Server running on port ${port}`, { env: process.env.NODE_ENV || 'development' });
   startWorker();
 });

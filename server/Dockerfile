@@ -7,10 +7,12 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm install --omit=dev
+# Force rebuild from source to match the exact runtime environment
+RUN npm rebuild better-sqlite3 --build-from-source
 
 COPY . .
 
-RUN mkdir -p /data
+RUN mkdir -p /data /app/uploads /app/logs
 
 EXPOSE 8080
 
