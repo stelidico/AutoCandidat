@@ -1,5 +1,6 @@
 const fs = require('fs');
-const pdfParse = require('pdf-parse');
+// Use the internal path to avoid pdf-parse v1's test-file side-effect on require
+const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 async function extractTextFromPDF(filePath) {
   const buffer = fs.readFileSync(filePath);
