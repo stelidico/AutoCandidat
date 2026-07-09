@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Pages privées (inutile d'indexer)
+Disallow: /app
+Disallow: /app/
+
+Sitemap: https://autocandidat.fr/sitemap.xml

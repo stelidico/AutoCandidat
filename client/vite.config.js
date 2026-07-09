@@ -11,4 +11,9 @@ export default defineConfig({
       '/auth': { target: 'http://localhost:4000', changeOrigin: true },
     },
   },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    globals: true,
+  },
 });

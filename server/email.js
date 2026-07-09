@@ -50,10 +50,10 @@ function createTransportFromOptions(opts = {}) {
  * - smtp: optional per-request SMTP config
  * - oauth: optional per-request OAuth2 config for Gmail
  */
-async function sendEmail({ to, subject, text, html, from, smtp, oauth }) {
+async function sendEmail({ to, subject, text, html, from, smtp, oauth, attachments }) {
   const transport = createTransportFromOptions({ smtp, oauth });
   if (!transport) throw new Error('No SMTP/OAuth configuration provided (set SMTP_HOST env or provide smtp/oauth options).');
-  const info = await transport.sendMail({ from, to, subject, text, html });
+  const info = await transport.sendMail({ from, to, subject, text, html, attachments });
   return info;
 }
 

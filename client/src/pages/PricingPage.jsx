@@ -5,50 +5,61 @@ import { api } from '../api';
 
 const plans = [
   {
-    id: 'boost',
-    name: '100 candidatures',
-    price: '10€',
-    period: 'paiement unique',
-    description: 'Envoyez 100 candidatures en un clic',
+    id: 'free',
+    name: 'Essai Gratuit',
+    price: '0€',
+    period: 'à l\'inscription',
+    description: 'Testez la plateforme sans engagement',
     features: [
-      '100 candidatures automatiques',
+      '10 candidatures automatiques',
       'Lettre personnalisée par l\'IA',
-      'Offres France Travail correspondantes',
+      'Entreprises sélectionnées par l\'IA',
+      'Envoi avec ton adresse mail',
+      'Visualisation candidatures envoyées',
       'Sans engagement',
     ],
-    cta: 'Commencer — 10€',
+    cta: 'Commencer gratuitement',
     disabled: false,
     highlight: false,
+    isFree: true,
   },
   {
-    id: 'standard',
-    name: '290 candidatures',
-    price: '29€',
+    id: 'boost',
+    name: 'Forfait 19,99€',
+    price: '19,99€',
     period: 'paiement unique',
-    description: 'Envoyez 290 candidatures en un clic',
+    description: 'Envoyez 80 candidatures en un clic',
     features: [
-      '290 candidatures automatiques',
+      '80 candidatures automatiques',
       'Lettre personnalisée par l\'IA',
-      'Offres France Travail correspondantes',
+      'Entreprises sélectionnées par l\'IA',
+      'Envoi avec ton adresse mail',
+      'Suivi des candidatures',
       'Sans engagement',
     ],
-    cta: 'Commencer — 29€',
+    cta: 'Commencer — 19,99€',
     disabled: false,
     highlight: true,
   },
   {
     id: 'premium',
-    name: 'Premium',
-    price: '50€',
-    period: '/ mois',
-    description: 'Candidatures illimitées chaque mois',
+    name: 'Forfait 49,99€',
+    price: '49,99€',
+    period: 'paiement unique',
+    description: '150 candidatures avec toutes les fonctionnalités',
     features: [
-      'Candidatures illimitées',
-      'Lettres illimitées',
-      'Campagnes email illimitées',
+      '150 candidatures automatiques',
+      'Lettre personnalisée par l\'IA',
+      'Entreprises sélectionnées par l\'IA',
+      'Envoi avec ton adresse mail',
+      'Visualisation des liens de chaque offre',
+      'Visualisation si candidature ouverte par le recruteur',
+      'Réception notifications envoi sur mail personnel',
+      'Relance automatique après 7 jours sans réponse',
       'Support prioritaire',
+      'Sans engagement',
     ],
-    cta: 'Passer au Premium',
+    cta: 'Commencer — 49,99€',
     disabled: false,
     highlight: false,
   },
@@ -60,6 +71,7 @@ export default function PricingPage() {
   const navigate = useNavigate();
 
   const handleBuy = async (planId) => {
+    if (planId === 'free') { navigate('/app'); return; }
     setLoading(planId);
     setError('');
     try {
@@ -75,8 +87,8 @@ export default function PricingPage() {
     <Layout>
       <div className="max-w-4xl mx-auto py-8">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Choisissez votre formule</h1>
-          <p className="text-gray-500">L'IA envoie vos candidatures — vous attendez les réponses.</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#379683' }}>Choisissez votre formule</h1>
+          <p style={{ color: '#5D5C61' }}>L'IA envoie vos candidatures — vous attendez les réponses.</p>
         </div>
 
         {error && (
@@ -89,36 +101,37 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative rounded-2xl border p-6 flex flex-col ${
-                plan.highlight
-                  ? 'border-indigo-500 shadow-lg bg-indigo-50'
-                  : 'border-gray-200 bg-white'
-              }`}
+              className="relative rounded-2xl p-6 flex flex-col border-2"
+              style={{
+                borderColor: plan.highlight ? '#557A95' : '#d5cdc9',
+                backgroundColor: plan.highlight ? '#eef2f5' : 'white',
+              }}
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-indigo-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="text-white text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ backgroundColor: '#379683' }}>
                     Meilleure valeur
                   </span>
                 </div>
               )}
 
               <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-900">{plan.name}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>
+                <h2 className="text-lg font-bold" style={{ color: '#5D5C61' }}>{plan.name}</h2>
+                <p className="text-sm mt-0.5" style={{ color: '#7395AE' }}>{plan.description}</p>
               </div>
 
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
+                <span className="text-4xl font-extrabold" style={{ color: '#557A95' }}>{plan.price}</span>
                 {plan.period && (
-                  <span className="text-sm text-gray-500 ml-1">{plan.period}</span>
+                  <span className="text-sm ml-1" style={{ color: '#7395AE' }}>{plan.period}</span>
                 )}
               </div>
 
               <ul className="space-y-2 mb-8 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                  <li key={f} className="flex items-start gap-2 text-sm" style={{ color: '#5D5C61' }}>
+                    <span className="mt-0.5 shrink-0 font-bold" style={{ color: '#379683' }}>✓</span>
                     {f}
                   </li>
                 ))}
@@ -127,11 +140,10 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuy(plan.id)}
                 disabled={loading === plan.id}
-                className={`w-full py-2.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-60 ${
-                  plan.highlight
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    : 'bg-gray-900 hover:bg-gray-800 text-white'
-                }`}
+                className="w-full py-2.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-60 text-white"
+                style={{ backgroundColor: '#557A95' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#4a6a82'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#557A95'; }}
               >
                 {loading === plan.id ? 'Redirection…' : plan.cta}
               </button>

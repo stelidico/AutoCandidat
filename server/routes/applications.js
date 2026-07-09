@@ -3,7 +3,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const requireAuth = require('../middleware/auth');
-const VALID_STATUSES = ['draft', 'sent', 'waiting', 'response', 'interview', 'refused', 'accepted'];
+const VALID_STATUSES = ['draft', 'sent', 'waiting', 'response', 'interview', 'refused', 'accepted', 'failed'];
 
 // ─── GET /api/applications ────────────────────────────────────────────────────
 router.get('/', requireAuth, (req, res) => {
@@ -14,7 +14,7 @@ router.get('/', requireAuth, (req, res) => {
     query += ' AND status = ?';
     params.push(status);
   }
-  query += ' ORDER BY updated_at DESC';
+  query += ' ORDER BY updated_at DESC LIMIT 500';
   const rows = db.prepare(query).all(...params);
   res.json(rows);
 });
@@ -33,7 +33,8 @@ router.get('/stats', requireAuth, (req, res) => {
 router.post('/', requireAuth, (req, res, next) => {
   try {
     const { company, job_title, offer_url = '', status = 'draft', applied_at,
-            notes = '', salary = '', location = '', contact_name = '', contact_email = '' } = req.body;
+            notes = '', salary = '', location = '', contact_name = '', contact_email = '',
+            source = '', email_used = '' } = req.body;
 
     if (!company || typeof company !== 'string' || !company.trim()) {
       return res.status(422).json({ error: 'company est requis' });
@@ -50,14 +51,15 @@ router.post('/', requireAuth, (req, res, next) => {
     db.prepare(`
       INSERT INTO applications
         (id, user_id, company, job_title, offer_url, status, applied_at,
-         notes, salary, location, contact_name, contact_email, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         notes, salary, location, contact_name, contact_email, source, email_used, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id, req.user.id,
       company.trim(), job_title.trim(), offer_url.trim(), status,
       applied_at || (status === 'sent' ? now : null),
       notes.trim(), salary.trim(), location.trim(),
       contact_name.trim(), contact_email.trim(),
+      source.trim(), email_used.trim(),
       now, now
     );
 
@@ -75,7 +77,7 @@ router.put('/:id', requireAuth, (req, res, next) => {
     if (app.user_id !== req.user.id) return res.status(403).json({ error: 'Accès refusé' });
 
     const { company, job_title, offer_url, status, applied_at, notes,
-            salary, location, contact_name, contact_email } = req.body;
+            salary, location, contact_name, contact_email, source, email_used } = req.body;
 
     if (status !== undefined && !VALID_STATUSES.includes(status)) {
       return res.status(422).json({ error: 'status invalide' });
@@ -94,12 +96,15 @@ router.put('/:id', requireAuth, (req, res, next) => {
         location      = COALESCE(?, location),
         contact_name  = COALESCE(?, contact_name),
         contact_email = COALESCE(?, contact_email),
+        source        = COALESCE(?, source),
+        email_used    = COALESCE(?, email_used),
         updated_at    = ?
       WHERE id = ?
     `).run(
       company ?? null, job_title ?? null, offer_url ?? null, status ?? null,
       applied_at ?? null, notes ?? null, salary ?? null, location ?? null,
       contact_name ?? null, contact_email ?? null,
+      source ?? null, email_used ?? null,
       now, req.params.id
     );
 

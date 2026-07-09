@@ -6,7 +6,9 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
 const db = require('../db');
+const { encrypt, decrypt } = require('../crypto');
 const requireAuth = require('../middleware/auth');
+const { checkLetterQuota, incrementLetters } = require('../middleware/quota');
 const { analyzeText } = require('../analysis');
 const { generateCoverLetter } = require('../openai');
 const { sendEmail } = require('../email');
@@ -26,12 +28,21 @@ const upload = multer({
 });
 
 // ─── CV Upload ────────────────────────────────────────────────────────────────
+const CV_STORAGE_DIR = path.join(__dirname, '..', 'data', 'cv_files');
+
 router.post('/upload', requireAuth, upload.single('file'), async (req, res, next) => {
   if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
   try {
     const text = await extractTextFromPDF(req.file.path);
+
+    // Save the PDF for later use as email attachment
+    if (!fs.existsSync(CV_STORAGE_DIR)) fs.mkdirSync(CV_STORAGE_DIR, { recursive: true });
+    const cvFileId = uuidv4();
+    const dest = path.join(CV_STORAGE_DIR, `${cvFileId}.pdf`);
+    fs.copyFileSync(req.file.path, dest);
     fs.unlinkSync(req.file.path);
-    res.json({ text, originalname: req.file.originalname, size: req.file.size });
+
+    res.json({ text, originalname: req.file.originalname, size: req.file.size, cvFileId });
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     next(err);
@@ -53,13 +64,14 @@ router.post('/analyze', requireAuth, async (req, res, next) => {
 });
 
 // ─── Génération lettre ────────────────────────────────────────────────────────
-router.post('/generate', requireAuth, async (req, res, next) => {
+router.post('/generate', requireAuth, checkLetterQuota, async (req, res, next) => {
   try {
-    const { cvText, jobDescription, analysis, tone } = req.body;
+    const { cvText, jobDescription, analysis, tone, instruction } = req.body;
     if (!cvText || typeof cvText !== 'string' || cvText.trim().length === 0) {
       return res.status(400).json({ error: 'cvText est requis' });
     }
-    const letter = await generateCoverLetter({ cvText, jobDescription, analysis, tone });
+    const letter = await generateCoverLetter({ cvText, jobDescription, analysis, tone, instruction, userId: req.user.id });
+    incrementLetters(req.user.id);
     res.json({ letter });
   } catch (err) {
     next(err);
@@ -110,6 +122,9 @@ router.post('/accounts', requireAuth, (req, res, next) => {
     if (!smtp || !smtp.host || !smtp.user || !smtp.pass) {
       return res.status(422).json({ error: 'smtp.host, smtp.user et smtp.pass sont requis' });
     }
+    if (/gmail/i.test(smtp.host) || /gmail\.com$/i.test(email_address.trim())) {
+      return res.status(422).json({ error: 'Gmail ne supporte plus l\'authentification SMTP. Utilisez le bouton "Connecter Gmail" (OAuth) à la place.' });
+    }
 
     const id = uuidv4();
     db.prepare(`
@@ -122,7 +137,7 @@ router.post('/accounts', requireAuth, (req, res, next) => {
       email_address.trim(),
       smtp.host, smtp.port || 587,
       smtp.secure ? 1 : 0,
-      smtp.user, smtp.pass
+      smtp.user, encrypt(smtp.pass)
     );
 
     const account = db.prepare(
@@ -324,15 +339,18 @@ router.post('/campaigns/:id/start', requireAuth, (req, res, next) => {
 
 // ─── Helper: build send options from DB account ───────────────────────────────
 function buildSendOpts(account) {
-  if (account.provider === 'gmail' && account.oauth_refresh_token) {
+  if (account.provider === 'gmail') {
+    if (!account.oauth_refresh_token) {
+      throw new Error(`Le compte Gmail ${account.email_address} n'est pas correctement connecté. Reconnectez-le via OAuth dans la section Comptes Email.`);
+    }
     return {
       oauth: {
         type: 'oauth2',
         user: account.email_address,
         clientId: process.env.GMAIL_CLIENT_ID,
         clientSecret: process.env.GMAIL_CLIENT_SECRET,
-        refreshToken: account.oauth_refresh_token,
-        accessToken: account.oauth_access_token,
+        refreshToken: decrypt(account.oauth_refresh_token),
+        accessToken: decrypt(account.oauth_access_token),
       },
     };
   }
@@ -343,7 +361,7 @@ function buildSendOpts(account) {
         port: account.smtp_port || 587,
         secure: account.smtp_secure === 1,
         user: account.smtp_user,
-        pass: account.smtp_pass,
+        pass: decrypt(account.smtp_pass),
       },
     };
   }

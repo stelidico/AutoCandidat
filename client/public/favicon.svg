@@ -1,0 +1,14 @@
+<svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#7888a0"/>
+      <stop offset="35%"  stop-color="#c0ccd8"/>
+      <stop offset="55%"  stop-color="#e0eaf2"/>
+      <stop offset="100%" stop-color="#6878a0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="93" fill="white" stroke="#1D3461" stroke-width="4"/>
+  <polygon points="48,164 62,168 96,34 82,30" fill="url(#metalGrad)"/>
+  <polygon points="82,30 96,34 130,168 116,164" fill="url(#metalGrad)"/>
+  <path d="M 144,72 A 62,62 0 1,1 144,128" stroke="#1D3461" stroke-width="17" fill="none" stroke-linecap="round"/>
+</svg>

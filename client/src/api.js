@@ -2,20 +2,19 @@ import axios from 'axios';
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('autocandidat_token');
-  if (token) config.headers['Authorization'] = `Bearer ${token}`;
-  return config;
+  withCredentials: true,
 });
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('autocandidat_token');
-      window.location.href = '/login';
+      // Don't redirect on public pages (avoids infinite loop during initial auth check)
+      const publicPaths = ['/', '/login', '/register', '/oauth-callback', '/pricing', '/contact', '/privacy', '/legal', '/cgu'];
+      const isPublic = publicPaths.some(p => window.location.pathname === p || window.location.pathname.startsWith(p + '/'));
+      if (!isPublic) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

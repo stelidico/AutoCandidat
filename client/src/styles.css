@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── Palette Autocandidat ──────────────────────────────────────────
+     #5D5C61  Gris Charbon  → texte principal
+     #379683  Vieux Violet  → titres H2/H3, accents
+     #7395AE  Bleu Gris     → décoratifs, fonds légers
+     #557A95  Bleu Acier    → boutons, liens importants
+     #B1A296  Beige/Tan     → fonds principaux
+  ─────────────────────────────────────────────────────────────────── */
+
+  /* Remap indigo → Bleu Acier #557A95 (boutons, liens, focus) */
+  --color-indigo-50:  #eef2f5;
+  --color-indigo-100: #d9e4eb;
+  --color-indigo-200: #b3c9d7;
+  --color-indigo-300: #8aaec3;
+  --color-indigo-400: #7395ae;
+  --color-indigo-500: #6284a1;
+  --color-indigo-600: #557a95;
+  --color-indigo-700: #4a6a82;
+  --color-indigo-800: #3d5a6e;
+  --color-indigo-900: #2d4252;
+  --color-indigo-950: #1e2e3a;
+
+  /* Remap purple → même Bleu Acier */
+  --color-purple-50:  #eef2f5;
+  --color-purple-600: #557a95;
+  --color-purple-700: #4a6a82;
+
+  /* Remap green → Vieux Violet #379683 (coches ✓) */
+  --color-green-50:  #e8f4f1;
+  --color-green-100: #c6e5df;
+  --color-green-500: #379683;
+  --color-green-600: #2d7a69;
+
+  /* Remap amber → accents chaleureux */
+  --color-amber-400: #379683;
+}

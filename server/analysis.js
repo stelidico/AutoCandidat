@@ -1,7 +1,7 @@
 const Anthropic = require('@anthropic-ai/sdk');
 
 const client = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 30000 })
   : null;
 
 function extractEmails(text) {
@@ -10,7 +10,8 @@ function extractEmails(text) {
 }
 
 function extractPhones(text) {
-  const re = /(?:\+\d{1,3}[ -])?(?:\(?\d{2,3}\)?[ -]?)?\d{2,4}[ -]?\d{2,4}[ -]?\d{2,4}/g;
+  // French phone numbers: 0X XX XX XX XX or +33 X XX XX XX XX or 0033 X XX XX XX XX
+  const re = /(?:(?:\+33|0033)\s?[1-9]|0[1-9])(?:[\s.\-]?\d{2}){4}/g;
   return Array.from(new Set((text.match(re) || []).map(s => s.trim())));
 }
 
@@ -47,12 +48,19 @@ async function analyzeText(text) {
       });
       const content = response.content[0]?.text || '';
       try {
-        const parsed = JSON.parse(content);
+        // Extract JSON: find first { ... last } to ignore markdown/prose around it
+        const firstBrace = content.indexOf('{');
+        const lastBrace = content.lastIndexOf('}');
+        const jsonStr = firstBrace >= 0 && lastBrace > firstBrace
+          ? content.slice(firstBrace, lastBrace + 1)
+          : content;
+        const parsed = JSON.parse(jsonStr);
         summary = parsed.summary || summary;
-        experiences = parsed.experiences || experiences;
+        experiences = Array.isArray(parsed.experiences) ? parsed.experiences : experiences;
         if (Array.isArray(parsed.skills) && parsed.skills.length) skills = parsed.skills;
       } catch (e) {
-        summary = content.substring(0, 800);
+        // Fallback: use first meaningful paragraph as summary
+        summary = text.split('\n').filter(l => l.trim().length > 30)[0]?.trim() || summary;
       }
     } catch (err) {
       // ignore errors, return best-effort local extraction

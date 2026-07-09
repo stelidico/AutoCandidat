@@ -36,7 +36,7 @@ router.get('/status', requireAuth, (req, res) => {
 // POST /api/stripe/create-checkout-session
 router.post('/create-checkout-session', requireAuth, async (req, res) => {
   const { plan } = req.body;
-  if (!['boost', 'standard', 'premium'].includes(plan)) {
+  if (!['boost', 'premium'].includes(plan)) {
     return res.status(400).json({ error: 'Plan invalide' });
   }
 
@@ -56,29 +56,18 @@ router.post('/create-checkout-session', requireAuth, async (req, res) => {
     sessionParams.line_items = [{
       price_data: {
         currency: 'eur',
-        product_data: { name: 'Autocandidat — 100 candidatures automatiques' },
-        unit_amount: 1000,
-      },
-      quantity: 1,
-    }];
-  } else if (plan === 'standard') {
-    sessionParams.mode = 'payment';
-    sessionParams.line_items = [{
-      price_data: {
-        currency: 'eur',
-        product_data: { name: 'Autocandidat — 290 candidatures automatiques' },
-        unit_amount: 2900,
+        product_data: { name: 'Autocandidat — 80 candidatures automatiques' },
+        unit_amount: 1999,
       },
       quantity: 1,
     }];
   } else {
-    sessionParams.mode = 'subscription';
+    sessionParams.mode = 'payment';
     sessionParams.line_items = [{
       price_data: {
         currency: 'eur',
-        product_data: { name: 'Autocandidat Premium — Illimité' },
-        unit_amount: 5000,
-        recurring: { interval: 'month' },
+        product_data: { name: 'Autocandidat — 150 candidatures automatiques' },
+        unit_amount: 4999,
       },
       quantity: 1,
     }];

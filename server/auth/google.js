@@ -20,7 +20,7 @@ function generateAuthUrl(state) {
     access_type: 'offline',
     prompt: 'consent',
     scope: [
-      'https://www.googleapis.com/auth/gmail.send',
+      'https://mail.google.com/',
       'openid',
       'email',
       'profile',
@@ -38,6 +38,15 @@ async function exchangeCode(code) {
 // ─── Signed OAuth state (HMAC-SHA256) ─────────────────────────────────────────
 function makeOAuthState(userId) {
   const payload = Buffer.from(JSON.stringify({ userId, iat: Date.now() })).toString('base64url');
+  const sig = crypto
+    .createHmac('sha256', process.env.JWT_SECRET || 'fallback')
+    .update(payload)
+    .digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function makeRegisterState() {
+  const payload = Buffer.from(JSON.stringify({ register: true, iat: Date.now() })).toString('base64url');
   const sig = crypto
     .createHmac('sha256', process.env.JWT_SECRET || 'fallback')
     .update(payload)
@@ -85,6 +94,7 @@ module.exports = {
   generateAuthUrl,
   exchangeCode,
   makeOAuthState,
+  makeRegisterState,
   verifyOAuthState,
   decodeIdToken,
   REDIRECT_URI,
