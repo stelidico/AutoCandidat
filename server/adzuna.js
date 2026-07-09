@@ -19,7 +19,6 @@ async function searchAdzunaOffers({ keywords = '', location = '', size = 50 } = 
     app_key: appKey,
     results_per_page: String(Math.min(size, 50)),
     what: keywords,
-    content_type: 'application/json',
   });
   if (location) params.set('where', location);
 

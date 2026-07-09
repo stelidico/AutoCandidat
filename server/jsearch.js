@@ -25,8 +25,8 @@ async function searchJSearchOffers({ keywords = '', location = '', size = 20 } =
     date_posted: 'all',
   });
 
-  const data = await httpGet(`/search?${params.toString()}`, apiKey);
-  const offers = (data.data || []).map(formatOffer);
+  const data = await httpGet(`/search-v2?${params.toString()}`, apiKey);
+  const offers = (data.data?.jobs || []).map(formatOffer);
 
   return {
     total: offers.length,
@@ -42,7 +42,7 @@ function formatOffer(raw) {
     companyWebsite: raw.employer_website || '',
     location: [raw.job_city, raw.job_country].filter(Boolean).join(', '),
     contract: raw.job_employment_type || '',
-    salary: raw.job_min_salary ? `${raw.job_min_salary}–${raw.job_max_salary || ''} ${raw.job_salary_currency || ''}`.trim() : '',
+    salary: raw.job_salary_string || (raw.job_min_salary ? `${raw.job_min_salary}–${raw.job_max_salary || ''} ${raw.job_salary_period || ''}`.trim() : ''),
     description: raw.job_description || '',
     skills: raw.job_required_skills || [],
     publishedAt: raw.job_posted_at_datetime_utc || '',
