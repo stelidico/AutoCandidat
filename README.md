@@ -1,6 +1,6 @@
 # Autocandidat
 
-SaaS d'automatisation de candidatures par IA : upload de CV, analyse et génération de lettres de motivation via Claude (Anthropic), recherche d'offres multi-source (France Travail, Adzuna, Jooble), envoi automatique des candidatures par email et suivi façon ATS.
+SaaS d'automatisation de candidatures par IA : upload de CV, analyse et génération de lettres de motivation via Claude (Anthropic), recherche d'offres multi-source (France Travail, Adzuna, Jooble, JSearch), envoi automatique des candidatures par email et suivi façon ATS.
 
 Structure :
 - `server/` : API Express + SQLite (auth JWT, OAuth Gmail, Stripe, IA, envoi d'emails, jobs asynchrones)
@@ -31,7 +31,7 @@ npm run dev
 
 - **Auth** : email/mot de passe (JWT en cookie httpOnly) + connexion Gmail OAuth2
 - **CV & lettres** : upload PDF, extraction de texte, analyse IA (compétences/expériences), génération de lettre de motivation (Claude), régénération avec instructions (plus courte, plus formelle, etc.)
-- **Candidature automatique** : recherche et fusion d'offres (France Travail, Adzuna, Jooble), sélection des entreprises les plus pertinentes par IA, envoi en masse des candidatures avec CV joint, relance automatique à J+7 si l'email n'a pas été ouvert
+- **Candidature automatique** : recherche et fusion d'offres (France Travail, Adzuna, Jooble, JSearch — qui agrège Google for Jobs, incluant des offres LinkedIn/Indeed/Glassdoor), sélection des entreprises les plus pertinentes par IA, envoi en masse des candidatures avec CV joint, relance automatique à J+7 si l'email n'a pas été ouvert
 - **Comptes email** : connexion Gmail (OAuth2) ou SMTP générique (Orange, SFR, Outlook, Yahoo, etc.)
 - **ATS** : suivi des candidatures envoyées (statuts, stats)
 - **Entreprises** : recherche d'entreprises via l'API SIRENE (recherche-entreprises.api.gouv.fr)

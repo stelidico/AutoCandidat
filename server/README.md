@@ -1,6 +1,6 @@
 # Autocandidat — server
 
-API Express + SQLite (better-sqlite3). Auth JWT (cookie httpOnly), OAuth2 Gmail, IA Claude (Anthropic) pour l'analyse de CV et la génération de lettres, agrégation d'offres d'emploi (France Travail, Adzuna, Jooble), paiement Stripe, envoi d'emails (Nodemailer + Resend en fallback), file de jobs asynchrones (`worker.js`) pour les campagnes et l'auto-candidature.
+API Express + SQLite (better-sqlite3). Auth JWT (cookie httpOnly), OAuth2 Gmail, IA Claude (Anthropic) pour l'analyse de CV et la génération de lettres, agrégation d'offres d'emploi (France Travail, Adzuna, Jooble, JSearch), paiement Stripe, envoi d'emails (Nodemailer + Resend en fallback), file de jobs asynchrones (`worker.js`) pour les campagnes et l'auto-candidature.
 
 ## Démarrage
 
@@ -22,7 +22,7 @@ npm test                 # Jest + Supertest (base SQLite en mémoire)
 - `email.js` — envoi SMTP/OAuth2 Gmail (Nodemailer)
 - `crypto.js` — chiffrement AES-256-GCM des identifiants stockés en base
 - `worker.js` — file de jobs (campagnes, auto-candidature, relances J+7)
-- `adzuna.js`, `francetravail.js`, `jooble.js` — agrégateurs d'offres
+- `adzuna.js`, `francetravail.js`, `jooble.js`, `jsearch.js` — agrégateurs d'offres (JSearch agrège Google for Jobs, incluant LinkedIn/Indeed/Glassdoor)
 - `auth/google.js` — OAuth2 Google
 - `middleware/` — auth JWT, contrôle admin, quotas
 - `routes/` — un fichier par domaine (users, api, jobs, applications, stripe, auth, admin, companies, promo)

@@ -5,6 +5,7 @@ const requireAuth = require('../middleware/auth');
 const { searchOffers, calculateMatchScore } = require('../francetravail');
 const { searchAdzunaOffers } = require('../adzuna');
 const { searchJoobleOffers } = require('../jooble');
+const { searchJSearchOffers } = require('../jsearch');
 const db = require('../db');
 const logger = require('../logger');
 
@@ -215,9 +216,10 @@ router.post('/auto-apply', requireAuth, async (req, res, next) => {
       }
     }
 
-    // 1c. Search Adzuna + Jooble en parallèle
+    // 1c. Search Adzuna + Jooble + JSearch (Google for Jobs : LinkedIn, Indeed, Glassdoor...) en parallèle
     let adzunaCompanies = [];
     let joobleCompanies = [];
+    let jsearchCompanies = [];
     const searchKeywords = jobDesc.trim() || toSireneKeyword(sector);
 
     await Promise.all([
@@ -263,9 +265,30 @@ router.post('/auto-apply', requireAuth, async (req, res, next) => {
           logger.warn('Jooble search skipped', { err: err.message });
         }
       })(),
+      (async () => {
+        if (!process.env.RAPIDAPI_KEY) return;
+        try {
+          const jsResult = await searchJSearchOffers({ keywords: searchKeywords, size: 20 });
+          const seen = new Set();
+          jsearchCompanies = jsResult.offers
+            .filter((o) => o.company && o.company !== 'Entreprise non précisée' && o.url)
+            .filter((o) => { const k = o.company.toLowerCase().trim(); if (seen.has(k)) return false; seen.add(k); return true; })
+            .map((o) => ({
+              name: o.company,
+              address: o.location,
+              naf: '', sector, size: '',
+              companyWebsite: o.companyWebsite || '',
+              jobTitle: o.title,
+              offerUrl: o.url,
+              source: 'JSearch',
+            }));
+        } catch (err) {
+          logger.warn('JSearch search skipped', { err: err.message });
+        }
+      })(),
     ]);
 
-    // Fusionner : FT priorité 1, Adzuna priorité 2, Jooble priorité 3
+    // Fusionner : FT priorité 1, Adzuna priorité 2, Jooble priorité 3, JSearch priorité 4
     // SIRENE supprimé — aucun email fiable
     const seenNames = new Set(ftCompanies.map((c) => c.name.toLowerCase().trim()));
     const uniqueAdzuna = adzunaCompanies.filter((c) => {
@@ -280,7 +303,13 @@ router.post('/auto-apply', requireAuth, async (req, res, next) => {
       seenNames.add(k);
       return true;
     });
-    const allCandidates = [...ftCompanies, ...uniqueAdzuna, ...uniqueJooble];
+    const uniqueJSearch = jsearchCompanies.filter((c) => {
+      const k = c.name.toLowerCase().trim();
+      if (seenNames.has(k)) return false;
+      seenNames.add(k);
+      return true;
+    });
+    const allCandidates = [...ftCompanies, ...uniqueAdzuna, ...uniqueJooble, ...uniqueJSearch];
 
     if (allCandidates.length === 0) {
       return res.status(503).json({
