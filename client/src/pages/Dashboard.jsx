@@ -75,6 +75,7 @@ export default function Dashboard() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const dropRef = useRef(null);
+  const letterTextareaRef = useRef(null);
 
   useEffect(() => { localStorage.setItem('ac_cv_text', cvText); }, [cvText]);
   useEffect(() => { localStorage.setItem('ac_sector', sector); }, [sector]);
@@ -95,6 +96,12 @@ export default function Dashboard() {
     setPdfPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+  useEffect(() => {
+    const el = letterTextareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [letterEdited]);
   useEffect(() => {
     if (upgradeSuccess) {
       const t = setTimeout(() => setUpgradeSuccess(false), 5000);
@@ -204,7 +211,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">CV & Lettres</h1>
 
         {upgradeSuccess && (
@@ -246,6 +253,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-5">
           {/* Secteur cible */}
           <div>
@@ -416,7 +424,7 @@ export default function Dashboard() {
 
         {/* Lettre générée */}
         {letter && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-4 lg:sticky lg:top-6">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h2 className="font-semibold text-gray-800">Lettre de motivation</h2>
               <div className="flex items-center gap-2 flex-wrap">
@@ -437,8 +445,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <textarea value={letterEdited} onChange={(e) => setLetterEdited(e.target.value)} rows={10}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y leading-relaxed min-h-[200px] sm:min-h-[320px]" />
+            <textarea ref={letterTextareaRef} value={letterEdited} onChange={(e) => setLetterEdited(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed overflow-hidden min-h-[200px]" />
 
             <div className="flex flex-wrap gap-2">
               {REGEN_OPTIONS.map((opt) => {
@@ -493,6 +501,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
+        </div>
 
         {/* Modal Aperçu PDF */}
         {showPdfPreview && pdfPreviewUrl && (
