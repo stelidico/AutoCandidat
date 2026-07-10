@@ -461,7 +461,7 @@ async function processCampaign(campaignId) {
       const jobDesc = target.jobDescription || campaign.job_description_template || '';
       const cvText = target.cvText || campaign.cv_text || '';
       const analysis = cvText ? await analyzeText(cvText) : null;
-      const letter = await generateCoverLetter({ cvText, jobDescription: jobDesc, analysis });
+      const letter = await generateCoverLetter({ cvText, jobDescription: jobDesc, analysis, candidateName: ownerName });
 
       const subject = campaign.email_subject || `Candidature - ${target.jobTitle || ''}`;
       const body = letter + (campaign.email_footer ? '\n\n' + campaign.email_footer : '');

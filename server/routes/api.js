@@ -70,7 +70,8 @@ router.post('/generate', requireAuth, checkLetterQuota, async (req, res, next) =
     if (!cvText || typeof cvText !== 'string' || cvText.trim().length === 0) {
       return res.status(400).json({ error: 'cvText est requis' });
     }
-    const letter = await generateCoverLetter({ cvText, jobDescription, analysis, tone, instruction, userId: req.user.id });
+    const user = db.prepare('SELECT name FROM users WHERE id = ?').get(req.user.id);
+    const letter = await generateCoverLetter({ cvText, jobDescription, analysis, tone, instruction, userId: req.user.id, candidateName: user?.name || '' });
     incrementLetters(req.user.id);
     res.json({ letter });
   } catch (err) {

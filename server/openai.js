@@ -6,17 +6,21 @@ const client = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 30000 })
   : null;
 
-async function generateCoverLetter({ cvText = '', jobDescription = '', analysis = null, tone = 'professionnel', instruction = '', userId = null } = {}) {
+async function generateCoverLetter({ cvText = '', jobDescription = '', analysis = null, tone = 'professionnel', instruction = '', userId = null, candidateName = '' } = {}) {
   const demo = `Lettre de motivation générée (mode demo).\nPoste visé: ${jobDescription}\nRésumé CV: ${cvText.slice(0, 200)}...`;
   if (!client) return demo;
+
+  const structureNote = `\n\nStructure attendue:\n- Commence par "Madame, Monsieur," sur sa propre ligne (formule d'appel).\n- Termine par une formule de politesse complète (ex: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.") suivie du nom du candidat${candidateName ? ` (${candidateName})` : ''} sur la ligne suivante.`;
 
   let userContent;
   if (instruction) {
     // Regenerate with specific instruction
-    userContent = `Réécris la lettre de motivation précédente en appliquant cette instruction: "${instruction}". Conserve les informations clés du profil et de l'offre. Fournis uniquement la nouvelle lettre en texte brut.`;
+    userContent = `Réécris la lettre de motivation précédente en appliquant cette instruction: "${instruction}". Conserve les informations clés du profil et de l'offre, ainsi que la formule d'appel et la formule de politesse finale. Fournis uniquement la nouvelle lettre en texte brut.`;
+    userContent += structureNote;
   } else {
     userContent = `Rédige une lettre de motivation concise (3-4 paragraphes) et professionnelle en français, avec le ton: ${tone}. `;
     userContent += `Personnalise la lettre pour le poste, mets en valeur les compétences pertinentes, inclue des mots-clés ATS et évite les formulations génériques.`;
+    userContent += structureNote;
   }
 
   if (jobDescription) {
@@ -39,7 +43,7 @@ async function generateCoverLetter({ cvText = '', jobDescription = '', analysis 
     userContent += `\n\nCV:\n${cvText}`;
   }
 
-  userContent += `\n\nFournis la lettre uniquement en texte, sans balises, commence par une phrase d'accroche.`;
+  userContent += `\n\nFournis la lettre uniquement en texte, sans balises. Après la formule d'appel, enchaîne directement avec une phrase d'accroche percutante.`;
 
   const response = await client.messages.create({
     model: 'claude-opus-4-6',
