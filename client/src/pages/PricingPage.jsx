@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import PublicHeader from '../components/PublicHeader';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { PRICING_PLANS } from '../data/pricingPlans';
@@ -8,16 +9,6 @@ import { PRICING_PLANS } from '../data/pricingPlans';
 // Visiteur anonyme → simple en-tête public (logo + retour à l'accueil).
 // Utilisateur connecté → coquille de l'app (sidebar), pour rester cohérent
 // avec le reste du produit quand on vient upgrader depuis l'intérieur.
-function PublicHeader() {
-  return (
-    <div className="border-b" style={{ borderColor: '#d5cdc9' }}>
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <Link to="/" className="font-bold text-lg" style={{ color: '#379683' }}>Autocandidat</Link>
-      </div>
-    </div>
-  );
-}
-
 export default function PricingPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(null);
