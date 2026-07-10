@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
@@ -11,6 +11,18 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Résultat OAuth déposé par OAuthCallback après redirection (retour de connectGmail)
+  useEffect(() => {
+    const err = sessionStorage.getItem('oauth_error');
+    if (err) { setError(err); sessionStorage.removeItem('oauth_error'); }
+    const ok = sessionStorage.getItem('oauth_success');
+    if (ok) {
+      sessionStorage.removeItem('oauth_success');
+      setLoading(true);
+      refreshUser().then(() => navigate('/app'));
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,36 +42,17 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
+      sessionStorage.setItem('oauth_success_url', '/login');
+      sessionStorage.setItem('oauth_error_url', '/login');
       const apiBase = import.meta.env.VITE_API_URL || '/api';
       const serverBase = apiBase.replace(/\/api$/, '');
       const res = await fetch(`${serverBase}/auth/google/url/register`, { credentials: 'include' });
       if (!res.ok) throw new Error('Erreur serveur OAuth');
       const data = await res.json();
-      const popup = window.open(data.url, 'gmail_oauth', 'width=600,height=700');
-
-      const onMessage = (ev) => {
-        if (ev.origin !== window.location.origin) return;
-        if (ev.data?.type !== 'gmail_oauth_success' && ev.data?.type !== 'gmail_oauth_error') return;
-        window.removeEventListener('message', onMessage);
-        clearInterval(timer);
-        if (ev.data.type === 'gmail_oauth_success') {
-          // Cookie is already set — refresh user state
-          refreshUser().then(() => navigate('/app'));
-        } else {
-          setError(ev.data.error || 'Erreur OAuth');
-          setLoading(false);
-        }
-      };
-      window.addEventListener('message', onMessage);
-
-      const timer = setInterval(() => {
-        if (popup && popup.closed) {
-          clearInterval(timer);
-          window.removeEventListener('message', onMessage);
-          setLoading(false);
-        }
-      }, 500);
+      window.location.href = data.url;
     } catch (err) {
+      sessionStorage.removeItem('oauth_success_url');
+      sessionStorage.removeItem('oauth_error_url');
       setError(err.message || 'Erreur connexion Gmail');
       setLoading(false);
     }
