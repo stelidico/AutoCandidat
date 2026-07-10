@@ -25,7 +25,6 @@ const SUCCESS_STATS = [
   { value: '30s', label: 'Lettre générée', sub: 'personnalisée par l\'IA' },
   { value: '3×', label: 'Plus de candidatures', sub: 'objectif atteignable chaque semaine' },
   { value: '0€', label: 'Sans abonnement', sub: 'paiement unique, sans engagement' },
-  { value: '7j', label: 'Satisfait ou remboursé', sub: 'garantie sans conditions' },
 ];
 
 const PLANS = [
@@ -359,7 +358,7 @@ export default function LandingPage() {
           </div>
 
           {/* Statistiques de réussite */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
             {SUCCESS_STATS.map((s) => (
               <div key={s.label} className="text-center p-5 rounded-2xl" style={{ backgroundColor: '#7395AE' + '18' }}>
                 <div className="text-3xl font-bold mb-1" style={{ color: '#557A95' }}>{s.value}</div>
@@ -542,7 +541,7 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-xs text-center" style={{ color: '#7395AE' }}>
-              Satisfait ou remboursé 7 jours · Sans abonnement · Résiliation immédiate
+              Paiement unique, sans abonnement · Crédits sans date d'expiration
             </p>
           </div>
         </div>
