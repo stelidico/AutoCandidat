@@ -3,49 +3,42 @@
 
   <url>
     <loc>https://autocandidat.fr/</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://autocandidat.fr/register</loc>
-    <lastmod>2026-03-20</lastmod>
+    <loc>https://autocandidat.fr/pricing</loc>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://autocandidat.fr/login</loc>
-    <lastmod>2026-03-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://autocandidat.fr/contact</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://autocandidat.fr/cgu</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
     <loc>https://autocandidat.fr/privacy</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
     <loc>https://autocandidat.fr/legal</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
