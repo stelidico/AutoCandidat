@@ -115,6 +115,7 @@ const migrations = [
   "ALTER TABLE page_views ADD COLUMN country TEXT NOT NULL DEFAULT ''",
   "CREATE INDEX IF NOT EXISTS idx_page_views_city ON page_views(city)",
   "ALTER TABLE applications ADD COLUMN follow_up_sent_at INTEGER",
+  "ALTER TABLE applications ADD COLUMN apply_method TEXT NOT NULL DEFAULT 'email'",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (_) {}

@@ -8,6 +8,7 @@ const { generateCoverLetter } = require('./openai');
 const { sendEmail } = require('./email');
 const logger = require('./logger');
 const { buildSendOpts } = require('./routes/api');
+const { attemptFormApplication } = require('./formFiller');
 
 // ─── DNS MX verification ──────────────────────────────────────────────────────
 const mxCache = new Map(); // domain → true/false (cache 1h)
@@ -103,7 +104,7 @@ async function sendViaResend({ from, to, subject, text, attachments = [] }) {
 
 // ─── Process auto_apply_emails job ───────────────────────────────────────────
 
-async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
+async function processAutoApplyEmails({ userId, items, backupItems, letter, cvFileId }) {
   if (!Array.isArray(items) || items.length === 0) return;
 
   const user = db.prepare('SELECT name, sender_email, email, plan FROM users WHERE id = ?').get(userId);
@@ -111,8 +112,8 @@ async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
 
   const insertApp = db.prepare(`
     INSERT INTO applications
-      (id, user_id, company, job_title, offer_url, status, location, applied_at, notes, source, email_used, contact_email, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, '', ?, ?, ?)
+      (id, user_id, company, job_title, offer_url, status, location, applied_at, notes, source, email_used, contact_email, apply_method, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   // Préférer Gmail OAuth sur SMTP, puis le plus récent
   const emailAccount = db.prepare(`
@@ -149,9 +150,37 @@ async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
   const baseUrl = process.env.BASE_URL || 'https://autocandidat-api-production.up.railway.app';
   const nowTs = Math.floor(Date.now() / 1000);
   const results = [];
+  const originalTotal = items.length;
 
-  for (let i = 0; i < items.length; i++) {
-    const { appId, company, title, companyWebsite, contactEmail, offerUrl, location, source, sector: itemSector } = items[i];
+  // Offres en réserve : si l'une des `items` échoue (formulaire infranchissable, envoi
+  // impossible...), on pioche ici une offre de remplacement pour ne pas priver
+  // l'utilisateur d'une des candidatures qu'il a payées.
+  const queue = [...items];
+  const backupQueue = Array.isArray(backupItems) ? [...backupItems] : [];
+  let backupsUsed = 0;
+
+  function tryBackfill(failedCompany, reason) {
+    if (backupQueue.length === 0) return false;
+    const replacement = backupQueue.shift();
+    queue.push({ ...replacement, appId: uuidv4() });
+    backupsUsed++;
+    logger.info('Backfilling failed offer with a replacement', {
+      failedCompany, reason, replacementCompany: replacement.company, remainingBackups: backupQueue.length,
+    });
+    return true;
+  }
+
+  while (queue.length > 0) {
+    const { appId, company, title, companyWebsite, contactEmail, offerUrl, location, source, sector: itemSector } = queue.shift();
+    const personalizedLetter = personalizeLetterForCompany(letter, company, title);
+    const noteText = source === 'France Travail'
+      ? `Réponse à une offre France Travail — ${itemSector || ''}`
+      : source === 'Adzuna'
+      ? `Réponse à une offre Adzuna — ${itemSector || ''}`
+      : source === 'Jooble'
+      ? `Réponse à une offre Jooble — ${itemSector || ''}`
+      : `Candidature — ${itemSector || ''}`;
+
     try {
       let toEmail = '';
 
@@ -161,24 +190,45 @@ async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
         logger.info('Using verified contact email from offer', { company, toEmail });
       } else {
         const domain = deriveCompanyDomain({ company, companyWebsite });
-        if (!domain) {
-          // Pas d'email trouvable → on skip sans créer d'entrée ATS ni déduire de crédit
-          logger.warn('No email domain derived, skipping', { company });
-          results.push({ company, title, ok: false, reason: 'Adresse email introuvable' });
-          continue;
-        }
+        const mxValid = domain ? await hasMxRecord(domain) : false;
+        if (!domain || !mxValid) {
+          // Pas d'email fiable → tentative de remplissage automatique du formulaire de l'offre
+          logger.warn('No usable email, trying form-fill fallback', { company, domain });
+          const formResult = await attemptFormApplication({
+            offerUrl,
+            candidateName: fromName,
+            candidateEmail: fromAddr,
+            candidatePhone: '',
+            coverLetterText: personalizedLetter,
+            cvPath: cvFileId ? path.join(CV_STORAGE_DIR, `${cvFileId}.pdf`) : null,
+          });
 
-        // Priorité 2 : vérification MX
-        const mxValid = await hasMxRecord(domain);
-        if (!mxValid) {
-          logger.warn('No MX record for domain, skipping', { company, domain });
-          results.push({ company, title, ok: false, reason: `Domaine ${domain} sans serveur mail` });
+          if (!formResult.ok) {
+            const reason = !domain
+              ? 'Adresse email introuvable'
+              : `Domaine ${domain} sans serveur mail`;
+            const fullReason = `${reason} — formulaire: ${formResult.reason}`;
+            logger.warn('Form-fill fallback failed', { company, reason: formResult.reason });
+            if (!tryBackfill(company, fullReason)) {
+              results.push({ company, title, ok: false, reason: fullReason });
+            }
+            if (queue.length > 0) await sleep(2500);
+            continue;
+          }
+
+          // ✅ Formulaire rempli et soumis avec succès → créer l'entrée ATS + déduire 1 crédit
+          db.transaction(() => {
+            insertApp.run(appId, userId, company, title, offerUrl || '', location || '', nowTs, noteText, source || '', '', contactEmail || '', 'form', nowTs, nowTs);
+          })();
+
+          logger.info('Auto-apply via form submitted', { company, offerUrl });
+          results.push({ company, title, ok: true, via: 'form' });
+          if (queue.length > 0) await sleep(2500);
           continue;
         }
         toEmail = `rh@${domain}`;
       }
 
-      const personalizedLetter = personalizeLetterForCompany(letter, company, title);
       const subject = `Candidature – ${title} chez ${company}`;
 
       // Tracking pixel — forfait 49,99€ uniquement
@@ -198,16 +248,8 @@ async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
       }
 
       // ✅ Envoi réussi → créer l'entrée ATS + déduire 1 crédit
-      const noteText = source === 'France Travail'
-        ? `Réponse à une offre France Travail — ${itemSector || ''}`
-        : source === 'Adzuna'
-        ? `Réponse à une offre Adzuna — ${itemSector || ''}`
-        : source === 'Jooble'
-        ? `Réponse à une offre Jooble — ${itemSector || ''}`
-        : `Candidature — ${itemSector || ''}`;
-
       db.transaction(() => {
-        insertApp.run(appId, userId, company, title, offerUrl || '', location || '', nowTs, noteText, source || '', toEmail, contactEmail || '', nowTs, nowTs);
+        insertApp.run(appId, userId, company, title, offerUrl || '', location || '', nowTs, noteText, source || '', toEmail, contactEmail || '', 'email', nowTs, nowTs);
         if (trackingId) {
           db.prepare('UPDATE applications SET tracking_id = ? WHERE id = ?').run(trackingId, appId);
         }
@@ -217,16 +259,18 @@ async function processAutoApplyEmails({ userId, items, letter, cvFileId }) {
       logger.info('Auto-apply email sent', { to: toEmail, company });
       results.push({ company, title, ok: true, to: toEmail });
     } catch (err) {
-      // Echec SMTP → on skip sans créer d'entrée ATS ni déduire de crédit
+      // Echec d'envoi → on tente une offre de remplacement avant d'abandonner ce créneau
       logger.error('Auto-apply single email failed', { appId, company, err: err.message });
-      results.push({ company, title, ok: false, reason: err.message });
+      if (!tryBackfill(company, err.message)) {
+        results.push({ company, title, ok: false, reason: err.message });
+      }
     }
 
     // Anti-spam : 2.5s entre chaque envoi
-    if (i < items.length - 1) await sleep(2500);
+    if (queue.length > 0) await sleep(2500);
   }
 
-  logger.info('Auto-apply emails batch done', { userId, total: items.length });
+  logger.info('Auto-apply emails batch done', { userId, total: originalTotal, backupsUsed, succeeded: results.filter((r) => r.ok).length });
 
   // ── Notification récapitulative — forfait 49,99€ uniquement ───────────────
   if (!isPremiumPlan) return;

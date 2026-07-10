@@ -203,6 +203,7 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
         <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
           {app.source && <span>📌 {app.source}</span>}
           {app.email_used && <span>✉ {app.email_used}</span>}
+          {app.apply_method === 'form' && <span>📝 Via formulaire en ligne</span>}
           {isPremium && app.email_opened_at && (
             <span className="flex items-center gap-1 text-green-600 font-medium">
               👁 Ouvert le {new Date(app.email_opened_at * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -220,7 +221,7 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
         <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">{app.notes}</p>
       )}
 
-      {isPremium && app.status === 'sent' && !app.contact_email && (
+      {isPremium && app.status === 'sent' && !app.contact_email && app.apply_method !== 'form' && (
         <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
           ⚠️ Pas d'email renseigné dans l'offre — envoyé à l'adresse RH générique
         </p>

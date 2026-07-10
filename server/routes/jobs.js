@@ -33,12 +33,15 @@ function toSireneKeyword(sector) {
 
 
 // ─── AI company selection via Claude ─────────────────────────────────────────
+// Retourne la liste COMPLÈTE des entreprises, classée par pertinence décroissante
+// (pas seulement les `needed` premières) : le reste sert de pool de secours pour
+// remplacer une offre dont l'envoi échoue (voir worker.js → tryBackfill).
 async function selectCompaniesWithAI(companies, cvAnalysis, jobTitle, needed) {
   const Anthropic = require('@anthropic-ai/sdk');
   const client = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
-  if (!client || companies.length === 0) return companies.slice(0, needed);
+  if (!client || companies.length === 0) return companies;
 
-  // Send all companies to Claude (each line ≈ 20-30 tokens, well within Haiku context)
+  // Send all companies to Claude (each line ≈ 20-30 tokens, well within context)
   const list = companies.map((c, i) =>
     `${i + 1}. ${c.name} | ${c.sector || c.naf || 'N/A'} | ${c.size || ''} | ${c.address || ''}`
   ).join('\n');
@@ -47,19 +50,27 @@ async function selectCompaniesWithAI(companies, cvAnalysis, jobTitle, needed) {
     ? `Résumé: ${cvAnalysis.summary || ''}\nCompétences: ${(cvAnalysis.skills || []).join(', ')}\nExpériences: ${(cvAnalysis.experiences || []).map(e => `${e.role || ''} chez ${e.company || ''}`).join('; ')}`
     : '';
 
-  const prompt = `Profil candidat:\n${profile}\n\nPoste recherché: ${jobTitle}\n\nSélectionne exactement ${needed} entreprises les plus pertinentes pour ce profil parmi cette liste. Réponds UNIQUEMENT avec les numéros séparés par des virgules.\n\n${list}`;
+  const prompt = `Profil candidat:\n${profile}\n\nPoste recherché: ${jobTitle}\n\nClasse les ${needed} entreprises les plus pertinentes pour ce profil en premier, suivies du reste par ordre de pertinence décroissante. Réponds UNIQUEMENT avec TOUS les numéros séparés par des virgules, du plus pertinent au moins pertinent.\n\n${list}`;
 
   try {
     const response = await client.messages.create(
-      { model: 'claude-haiku-4-5-20251001', max_tokens: 1200, messages: [{ role: 'user', content: prompt }] },
+      { model: 'claude-sonnet-4-6', max_tokens: 1200, messages: [{ role: 'user', content: prompt }] },
       { timeout: 12000 },
     );
     const indices = (response.content[0]?.text || '').match(/\d+/g)
       ?.map(n => parseInt(n) - 1)
       .filter(i => i >= 0 && i < companies.length) || [];
-    return indices.length > 0 ? indices.slice(0, needed).map(i => companies[i]) : companies.slice(0, needed);
+    if (indices.length === 0) return companies;
+
+    // Complète avec les entreprises que l'IA aurait omises, pour ne rien perdre du pool de secours
+    const seen = new Set(indices);
+    const ranked = indices.map(i => companies[i]);
+    for (let i = 0; i < companies.length; i++) {
+      if (!seen.has(i)) ranked.push(companies[i]);
+    }
+    return ranked;
   } catch {
-    return companies.slice(0, needed);
+    return companies;
   }
 }
 
@@ -318,14 +329,15 @@ router.post('/auto-apply', requireAuth, async (req, res, next) => {
       });
     }
 
-    // 2. Claude AI selects the best companies from the merged pool
+    // 2. Claude AI ranks the merged pool by relevance ; le reste sert de pool de secours
     const needed = Math.min(maxCompanies, allCandidates.length);
     const jobTitle = jobDesc.trim() || sector;
-    const selected = await selectCompaniesWithAI(allCandidates, analysis, jobTitle, needed);
-    const final = selected.slice(0, needed);
+    const ranked = await selectCompaniesWithAI(allCandidates, analysis, jobTitle, needed);
+    const final = ranked.slice(0, needed);
+    const backupPool = ranked.slice(needed);
 
     // 3. Queue emails — ATS entries et crédits déduits UNIQUEMENT après envoi réussi (dans le worker)
-    const items = final.map((c) => ({
+    const toItem = (c) => ({
       appId: uuidv4(),
       company: c.name,
       title: c.jobTitle || jobTitle,
@@ -335,17 +347,22 @@ router.post('/auto-apply', requireAuth, async (req, res, next) => {
       contactEmail: c.contactEmail || '',
       source: c.source || 'auto-apply',
       sector,
-    }));
+    });
+    const items = final.map(toItem);
+    // Pool de secours : si une offre échoue (formulaire infranchissable, envoi impossible...),
+    // le worker pioche ici pour ne pas priver l'utilisateur d'une candidature payée.
+    const backupItems = backupPool.map(toItem);
 
     db.prepare('INSERT INTO jobs (id, type, payload) VALUES (?, ?, ?)').run(
       uuidv4(),
       'auto_apply_emails',
-      JSON.stringify({ userId: req.user.id, items, letter, cvFileId, isAdmin }),
+      JSON.stringify({ userId: req.user.id, items, backupItems, letter, cvFileId, isAdmin }),
     );
 
     logger.info('AI auto-apply queued', {
       userId: req.user.id,
       count: items.length,
+      backupCount: backupItems.length,
       sector,
       mode: isAdmin ? 'admin' : isPremiumPlan ? 'premium' : `forfait-${bonus}`,
     });

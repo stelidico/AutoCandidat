@@ -9,6 +9,8 @@ COPY package*.json ./
 RUN npm install --omit=dev
 # Force rebuild from source to match the exact runtime environment
 RUN npm rebuild better-sqlite3 --build-from-source
+# Chromium + OS deps for Playwright (form-filling fallback for offers without email)
+RUN npx playwright install --with-deps chromium
 
 COPY . .
 
