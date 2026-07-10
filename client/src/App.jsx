@@ -18,6 +18,7 @@ import EmailPage from './pages/EmailPage';
 import LandingPage from './pages/LandingPage';
 import ContactPage from './pages/ContactPage';
 import PrivacyPage from './pages/PrivacyPage';
+import CookiesPage from './pages/CookiesPage';
 import LegalPage from './pages/LegalPage';
 import CGUPage from './pages/CGUPage';
 import PricingPage from './pages/PricingPage';
@@ -46,7 +47,7 @@ function CookieBanner() {
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 text-white px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
       <p className="text-xs text-gray-300 text-center sm:text-left">
         Ce site utilise le stockage local pour votre session.{' '}
-        <Link to="/privacy" className="underline hover:text-white">Politique de confidentialité</Link>
+        <Link to="/cookies" className="underline hover:text-white">Politique de cookies</Link>
       </p>
       <button onClick={accept} className="shrink-0 px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-xs font-medium transition-colors">
         Accepter
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/cgu" element={<CGUPage />} />
           <Route path="/account" element={<PrivateRoute><AccountSettingsPage /></PrivateRoute>} />

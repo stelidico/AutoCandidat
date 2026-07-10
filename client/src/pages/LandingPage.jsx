@@ -127,6 +127,7 @@ export default function LandingPage() {
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
             <Link to="/cgu" className="hover:text-white transition-colors">CGU/CGV</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link to="/cookies" className="hover:text-white transition-colors">Cookies</Link>
             <Link to="/legal" className="hover:text-white transition-colors">Mentions légales</Link>
           </nav>
           <div className="flex items-center gap-2">

@@ -194,15 +194,9 @@ export default function PrivacyPage() {
 
           <section className="space-y-2">
             <h2 className="text-base font-semibold text-gray-800">11. Cookies, stockage local et mesure d'audience</h2>
-
             <p className="text-sm text-gray-600">
-              Ce site n'utilise pas de cookies publicitaires ou de traçage cross-site. La session utilisateur est maintenue via le stockage local du navigateur (localStorage), qui ne constitue pas un cookie au sens de la directive ePrivacy.
-            </p>
-            <p className="text-sm text-gray-600">
-              À des fins de statistiques internes (fréquentation, pays/villes d'origine des visiteurs), chaque page consultée déclenche un enregistrement anonymisé (URL visitée, référent) associé à une géolocalisation approximative de l'adresse IP, réalisée via le service tiers <strong>ip-api.com</strong>. L'adresse IP n'est pas conservée, seule la ville/le pays qui en est déduit est stocké. Ce traitement est fondé sur notre intérêt légitime à mesurer l'audience du service (art. 6.1.f RGPD). Vous pouvez vous y opposer en nous contactant à <a href="mailto:contact@autocandidat.fr" className="text-indigo-600 hover:underline">contact@autocandidat.fr</a>.
-            </p>
-            <p className="text-sm text-gray-600">
-              Pour les utilisateurs du forfait premium, un pixel de suivi est inséré dans les emails de candidature envoyés afin de détecter si l'email a été ouvert par le destinataire (utile pour déclencher une relance automatique). Ce suivi ne concerne que les emails que vous envoyez vous-même via le service, pas votre messagerie personnelle.
+              Pour le détail complet des cookies utilisés, du stockage local et de la mesure d'audience, consultez notre{' '}
+              <Link to="/cookies" className="text-indigo-600 hover:underline">politique de cookies</Link>.
             </p>
           </section>
 
