@@ -182,10 +182,31 @@ app.post('/api/contact', async (req, res) => {
   const { email, name, subject, objet, content } = req.body;
   if (!email || !content) return res.status(422).json({ error: 'Email et contenu requis.' });
 
+  // Identification optionnelle de l'utilisateur connecté, pour prioriser les clients premium
+  // (Support prioritaire — forfait 49,99€). Ne bloque jamais l'envoi si absent/invalide.
+  let userId = null;
+  let isPriority = false;
+  try {
+    const token = req.cookies?.token;
+    if (token) {
+      const payload = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+      const user = db.prepare('SELECT id, plan FROM users WHERE id = ?').get(payload.sub);
+      if (user) {
+        userId = user.id;
+        isPriority = user.plan === 'premium';
+      }
+    }
+  } catch (_) {}
+
+  db.prepare(`
+    INSERT INTO contact_messages (id, user_id, is_priority, name, email, subject, objet, content)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(require('uuid').v4(), userId, isPriority ? 1 : 0, (name || '').trim().slice(0, 100), email.trim().slice(0, 200), (subject || '').trim().slice(0, 100), (objet || '').trim().slice(0, 200), content.trim().slice(0, 5000));
+
   const to = process.env.CONTACT_EMAIL || 'contact@autocandidat.fr';
   const from = process.env.RESEND_FROM || 'contact@autocandidat.fr';
   const text = `De: ${name || 'N/A'}\nEmail: ${email}\nSujet: ${subject || 'N/A'}\nObjet: ${objet || 'N/A'}\n\n${content}`;
-  const emailSubject = `[Contact Autocandidat] ${subject || objet || 'Message'}`;
+  const emailSubject = `${isPriority ? '🔴 [PRIORITAIRE] ' : ''}[Contact Autocandidat] ${subject || objet || 'Message'}`;
 
   try {
     if (process.env.RESEND_API_KEY) {

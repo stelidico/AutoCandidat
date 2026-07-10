@@ -172,6 +172,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_smtp_log_created ON smtp_log(created_at);
   CREATE INDEX IF NOT EXISTS idx_smtp_log_status  ON smtp_log(status);
 
+  CREATE TABLE IF NOT EXISTS contact_messages (
+    id          TEXT PRIMARY KEY,
+    user_id     TEXT REFERENCES users(id) ON DELETE SET NULL,
+    is_priority INTEGER NOT NULL DEFAULT 0,
+    name        TEXT NOT NULL DEFAULT '',
+    email       TEXT NOT NULL DEFAULT '',
+    subject     TEXT NOT NULL DEFAULT '',
+    objet       TEXT NOT NULL DEFAULT '',
+    content     TEXT NOT NULL DEFAULT '',
+    status      TEXT NOT NULL DEFAULT 'open',
+    created_at  INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+  CREATE INDEX IF NOT EXISTS idx_contact_priority ON contact_messages(status, is_priority, created_at);
+
   CREATE TABLE IF NOT EXISTS page_views (
     id         TEXT PRIMARY KEY,
     path       TEXT NOT NULL DEFAULT '/',

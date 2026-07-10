@@ -34,6 +34,8 @@ router.get('/stats', (req, res) => {
   const smtpErr    = db.prepare("SELECT COUNT(*) as c FROM smtp_log WHERE status = 'error' AND created_at > ?").get(week);
   const smtpTotal  = (smtpOk.c || 0) + (smtpErr.c || 0);
   const testPend   = db.prepare("SELECT COUNT(*) as c FROM testimonials WHERE status = 'pending'").get();
+  const supportOpen     = db.prepare("SELECT COUNT(*) as c FROM contact_messages WHERE status = 'open'").get();
+  const supportPriority = db.prepare("SELECT COUNT(*) as c FROM contact_messages WHERE status = 'open' AND is_priority = 1").get();
 
   res.json({
     users:        { total: users.total, premium: premium.c, suspended: suspended.c },
@@ -50,6 +52,7 @@ router.get('/stats', (req, res) => {
       error_rate_7d: smtpTotal > 0 ? Math.round((smtpErr.c / smtpTotal) * 100) / 100 : 0,
     },
     testimonials: { pending: testPend.c || 0 },
+    support: { open: supportOpen.c || 0, priority: supportPriority.c || 0 },
   });
 });
 
@@ -283,6 +286,37 @@ router.get('/audit-log', (req, res) => {
   `).all(limit, (page - 1) * limit);
   const total = db.prepare('SELECT COUNT(*) as c FROM admin_audit_log').get();
   res.json({ logs: rows, total: total.c, page, limit });
+});
+
+// ─── GET /api/admin/support ───────────────────────────────────────────────────
+// Messages de contact, triés priorité (Premium) d'abord puis plus récents,
+// pour garantir que le "Support prioritaire" du forfait 49,99€ est bien honoré.
+router.get('/support', (req, res) => {
+  const { status = 'open' } = req.query;
+  const where = status !== 'all' ? 'WHERE m.status = ?' : '';
+  const params = status !== 'all' ? [status] : [];
+  const rows = db.prepare(`
+    SELECT m.*, u.plan as user_plan
+    FROM contact_messages m LEFT JOIN users u ON m.user_id = u.id
+    ${where}
+    ORDER BY m.is_priority DESC, m.created_at ASC
+  `).all(...params);
+  res.json(rows);
+});
+
+// ─── PATCH /api/admin/support/:id ─────────────────────────────────────────────
+router.patch('/support/:id', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!['open', 'resolved'].includes(status)) {
+    return res.status(422).json({ error: 'status invalide' });
+  }
+  const m = db.prepare('SELECT id FROM contact_messages WHERE id = ?').get(id);
+  if (!m) return res.status(404).json({ error: 'Message non trouvé' });
+
+  db.prepare('UPDATE contact_messages SET status = ? WHERE id = ?').run(status, id);
+  logAudit(req.user.id, 'resolve_support_message', 'contact_message', id, { status });
+  res.json(db.prepare('SELECT * FROM contact_messages WHERE id = ?').get(id));
 });
 
 // ─── GET /api/admin/settings ──────────────────────────────────────────────────

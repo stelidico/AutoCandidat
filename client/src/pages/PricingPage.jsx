@@ -2,68 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../api';
-
-const plans = [
-  {
-    id: 'free',
-    name: 'Essai Gratuit',
-    price: '0€',
-    period: 'à l\'inscription',
-    description: 'Testez la plateforme sans engagement',
-    features: [
-      '10 candidatures automatiques',
-      'Lettre personnalisée par l\'IA',
-      'Entreprises sélectionnées par l\'IA',
-      'Envoi avec ton adresse mail',
-      'Visualisation candidatures envoyées',
-      'Sans engagement',
-    ],
-    cta: 'Commencer gratuitement',
-    disabled: false,
-    highlight: false,
-    isFree: true,
-  },
-  {
-    id: 'boost',
-    name: 'Forfait 19,99€',
-    price: '19,99€',
-    period: 'paiement unique',
-    description: 'Envoyez 80 candidatures en un clic',
-    features: [
-      '80 candidatures automatiques',
-      'Lettre personnalisée par l\'IA',
-      'Entreprises sélectionnées par l\'IA',
-      'Envoi avec ton adresse mail',
-      'Suivi des candidatures',
-      'Sans engagement',
-    ],
-    cta: 'Commencer — 19,99€',
-    disabled: false,
-    highlight: true,
-  },
-  {
-    id: 'premium',
-    name: 'Forfait 49,99€',
-    price: '49,99€',
-    period: 'paiement unique',
-    description: '150 candidatures avec toutes les fonctionnalités',
-    features: [
-      '150 candidatures automatiques',
-      'Lettre personnalisée par l\'IA',
-      'Entreprises sélectionnées par l\'IA',
-      'Envoi avec ton adresse mail',
-      'Visualisation des liens de chaque offre',
-      'Visualisation si candidature ouverte par le recruteur',
-      'Réception notifications envoi sur mail personnel',
-      'Relance automatique après 7 jours sans réponse',
-      'Support prioritaire',
-      'Sans engagement',
-    ],
-    cta: 'Commencer — 49,99€',
-    disabled: false,
-    highlight: false,
-  },
-];
+import { PRICING_PLANS } from '../data/pricingPlans';
 
 export default function PricingPage() {
   const [loading, setLoading] = useState(null);
@@ -98,7 +37,7 @@ export default function PricingPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map((plan) => (
+          {PRICING_PLANS.map((plan) => (
             <div
               key={plan.id}
               className="relative rounded-2xl p-6 flex flex-col border-2"
@@ -152,7 +91,7 @@ export default function PricingPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-8">
-          Paiement sécurisé par Stripe · Annulation à tout moment pour le Premium
+          Paiement sécurisé par Stripe · Paiement unique, sans abonnement
         </p>
 
         <div className="mt-6 text-center">

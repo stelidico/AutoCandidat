@@ -137,6 +137,8 @@ function DashboardTab() {
     { label: 'Emails SMTP ok (7j)',     value: fmt(stats.smtp?.ok_7d),              color: 'bg-blue-50 text-blue-700' },
     { label: 'Emails SMTP erreur (7j)', value: fmt(stats.smtp?.error_7d),           color: 'bg-red-50 text-red-700' },
     { label: 'Témoignages en attente',  value: fmt(stats.testimonials?.pending),     color: 'bg-orange-50 text-orange-700' },
+    { label: 'Support prioritaire (Premium)', value: fmt(stats.support?.priority), color: stats.support?.priority > 0 ? 'bg-red-100 text-red-700 ring-2 ring-red-400' : 'bg-gray-50 text-gray-600' },
+    { label: 'Support en attente (tous)', value: fmt(stats.support?.open),          color: 'bg-orange-50 text-orange-700' },
   ];
 
   return (
@@ -486,6 +488,84 @@ function TestimonialsTab() {
   );
 }
 
+// ─── Support Tab ──────────────────────────────────────────────────────────────
+// Les messages Premium (is_priority) remontent toujours en premier, quelle que
+// soit leur date — c'est ce qui matérialise l'engagement "Support prioritaire".
+function SupportTab() {
+  const [status, setStatus] = useState('open');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    api.get('/admin/support', { params: { status } })
+      .then(r => setItems(r.data))
+      .finally(() => setLoading(false));
+  }, [status]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function resolve(id, newStatus) {
+    try {
+      await api.patch(`/admin/support/${id}`, { status: newStatus });
+      load();
+    } catch (e) {
+      alert(e.response?.data?.error || 'Erreur');
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        {['open', 'resolved', 'all'].map(s => (
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              status === s ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {s === 'open' ? 'En attente' : s === 'resolved' ? 'Résolus' : 'Tous'}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p className="text-gray-400">Chargement...</p>
+      ) : items.length === 0 ? (
+        <p className="text-gray-400">Aucun message dans cette catégorie.</p>
+      ) : (
+        <div className="space-y-3">
+          {items.map(m => (
+            <div key={m.id} className={`border rounded-xl p-4 space-y-2 ${m.is_priority ? 'border-red-300 bg-red-50/40' : ''}`}>
+              <div className="flex justify-between items-start flex-wrap gap-2">
+                <div>
+                  {m.is_priority === 1 && (
+                    <span className="inline-block mr-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">🔴 PRIORITAIRE</span>
+                  )}
+                  <span className="font-semibold">{m.name || 'Anonyme'}</span>
+                  <span className="text-gray-400 text-sm ml-2">— {m.email}</span>
+                  {m.user_plan && <span className="ml-2 text-xs text-gray-400">({m.user_plan})</span>}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {m.status === 'open' ? (
+                    <button onClick={() => resolve(m.id, 'resolved')} className="px-2 py-1 text-xs bg-green-50 text-green-700 rounded hover:bg-green-100 whitespace-nowrap">Marquer résolu</button>
+                  ) : (
+                    <button onClick={() => resolve(m.id, 'open')} className="px-2 py-1 text-xs bg-gray-50 text-gray-700 rounded hover:bg-gray-100 whitespace-nowrap">Rouvrir</button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">Sujet : {m.subject || '—'} {m.objet && `· ${m.objet}`}</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{m.content}</p>
+              <p className="text-xs text-gray-400">{fmtDateTime(m.created_at)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── AI Usage Tab ─────────────────────────────────────────────────────────────
 function AIUsageTab() {
   const [days, setDays] = useState(7);
@@ -794,6 +874,7 @@ const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'users', label: 'Utilisateurs' },
   { id: 'testimonials', label: 'Témoignages' },
+  { id: 'support', label: 'Support' },
   { id: 'ai', label: 'Tokens IA' },
   { id: 'smtp', label: 'Logs SMTP' },
   { id: 'audit', label: 'Audit' },
@@ -835,6 +916,7 @@ export default function AdminPage() {
           {tab === 'dashboard' && <DashboardTab />}
           {tab === 'users' && <UsersTab />}
           {tab === 'testimonials' && <TestimonialsTab />}
+          {tab === 'support' && <SupportTab />}
           {tab === 'ai' && <AIUsageTab />}
           {tab === 'smtp' && <SMTPLogTab />}
           {tab === 'audit' && <AuditTab />}

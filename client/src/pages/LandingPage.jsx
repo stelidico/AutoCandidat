@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import Logo from '../components/Logo';
+import { PRICING_PLANS } from '../data/pricingPlans';
 
 // Palette : #5D5C61 texte | #379683 titres H2/H3 | #7395AE décoratif | #557A95 boutons | #B1A296 fonds
 
@@ -25,39 +26,6 @@ const SUCCESS_STATS = [
   { value: '30s', label: 'Lettre générée', sub: 'personnalisée par l\'IA' },
   { value: '3×', label: 'Plus de candidatures', sub: 'objectif atteignable chaque semaine' },
   { value: '0€', label: 'Sans abonnement', sub: 'paiement unique, sans engagement' },
-];
-
-const PLANS = [
-  {
-    name: 'Essai Gratuit',
-    price: '0€',
-    period: 'à l\'inscription',
-    featured: false,
-    badge: null,
-    features: ['10 candidatures automatiques', 'Lettre personnalisée par l\'IA', 'Entreprises sélectionnées par l\'IA', 'Envoi avec ton adresse mail', 'Sans engagement'],
-    cta: 'Commencer gratuitement',
-    href: '/register',
-  },
-  {
-    name: 'Forfait 19,99€',
-    price: '19,99€',
-    period: 'paiement unique',
-    featured: true,
-    badge: 'Meilleure valeur',
-    features: ['80 candidatures automatiques', 'Lettre personnalisée par l\'IA', 'Entreprises sélectionnées par l\'IA', 'Envoi avec ton adresse mail', 'Suivi des candidatures', 'Sans engagement'],
-    cta: 'Commencer — 19,99€',
-    href: '/register',
-  },
-  {
-    name: 'Forfait 49,99€',
-    price: '49,99€',
-    period: 'paiement unique',
-    featured: false,
-    badge: null,
-    features: ['150 candidatures automatiques', 'Lettre personnalisée par l\'IA', 'Envoi avec ton adresse mail', 'Visualisation des liens de chaque offre', 'Suivi ouverture par le recruteur', 'Relance automatique 7 jours', 'Support prioritaire', 'Sans engagement'],
-    cta: 'Commencer — 49,99€',
-    href: '/register',
-  },
 ];
 
 const FAQS = [
@@ -485,10 +453,10 @@ export default function LandingPage() {
             <p style={{ color: '#5D5C61' }}>Achetez des crédits selon vos besoins, sans abonnement imposé.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {PLANS.map((plan) => (
+            {PRICING_PLANS.map((plan) => (
               <div key={plan.name}
                 className="bg-white rounded-2xl p-6 flex flex-col border-2"
-                style={{ borderColor: plan.featured ? '#557A95' : '#7395AE' + '50' }}>
+                style={{ borderColor: plan.highlight ? '#557A95' : '#7395AE' + '50' }}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-bold" style={{ color: '#5D5C61' }}>{plan.name}</h3>
@@ -514,9 +482,9 @@ export default function LandingPage() {
                 </ul>
                 <Link to={user ? '/pricing' : plan.href}
                   className="block text-center py-2.5 rounded-xl text-sm font-semibold transition-colors text-white"
-                  style={{ backgroundColor: plan.featured ? '#557A95' : '#7395AE' }}
+                  style={{ backgroundColor: plan.highlight ? '#557A95' : '#7395AE' }}
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4a6a82'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = plan.featured ? '#557A95' : '#7395AE'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = plan.highlight ? '#557A95' : '#7395AE'}
                 >
                   {user ? 'Choisir ce forfait' : plan.cta}
                 </Link>
