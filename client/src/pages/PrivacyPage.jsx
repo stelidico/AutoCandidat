@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Politique de confidentialité</h1>
-            <p className="text-sm text-gray-400">Dernière mise à jour : mars 2026</p>
+            <p className="text-sm text-gray-400">Dernière mise à jour : juillet 2026</p>
           </div>
 
           <section className="space-y-2">
@@ -105,6 +105,18 @@ export default function PrivacyPage() {
                     <td className="px-3 py-2 border border-gray-200 text-gray-600">Toutes données en transit</td>
                     <td className="px-3 py-2 border border-gray-200 text-gray-600">USA</td>
                   </tr>
+                  <tr>
+                    <td className="px-3 py-2 border border-gray-200 font-medium">Resend</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">Envoi d'email de secours (si aucun compte email connecté)</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">Adresse et contenu des emails envoyés</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">USA</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border border-gray-200 font-medium">ip-api.com</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">Géolocalisation approximative (ville/pays) à des fins de statistiques internes</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">Adresse IP</td>
+                    <td className="px-3 py-2 border border-gray-200 text-gray-600">Non communiqué</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -120,6 +132,8 @@ export default function PrivacyPage() {
               <li><strong>Stripe :</strong> Certifié Data Privacy Framework (DPF) UE–États-Unis.</li>
               <li><strong>Google :</strong> Certifié Data Privacy Framework (DPF) UE–États-Unis.</li>
               <li><strong>Vercel / Railway :</strong> Clauses contractuelles types (CCT) applicables.</li>
+              <li><strong>Resend :</strong> Clauses contractuelles types (CCT) applicables.</li>
+              <li><strong>ip-api.com :</strong> Service utilisé uniquement pour convertir une adresse IP en ville/pays ; l'adresse IP n'est pas conservée après ce calcul.</li>
             </ul>
           </section>
 
@@ -179,10 +193,16 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-gray-800">11. Cookies et stockage local</h2>
+            <h2 className="text-base font-semibold text-gray-800">11. Cookies, stockage local et mesure d'audience</h2>
 
             <p className="text-sm text-gray-600">
-              Ce site n'utilise pas de cookies de traçage ou publicitaires. La session utilisateur est maintenue via le stockage local du navigateur (localStorage), qui ne constitue pas un cookie au sens de la directive ePrivacy mais reste soumis au consentement de l'utilisateur. Aucun script d'analyse ou de mesure d'audience tiers n'est déployé à ce jour.
+              Ce site n'utilise pas de cookies publicitaires ou de traçage cross-site. La session utilisateur est maintenue via le stockage local du navigateur (localStorage), qui ne constitue pas un cookie au sens de la directive ePrivacy.
+            </p>
+            <p className="text-sm text-gray-600">
+              À des fins de statistiques internes (fréquentation, pays/villes d'origine des visiteurs), chaque page consultée déclenche un enregistrement anonymisé (URL visitée, référent) associé à une géolocalisation approximative de l'adresse IP, réalisée via le service tiers <strong>ip-api.com</strong>. L'adresse IP n'est pas conservée, seule la ville/le pays qui en est déduit est stocké. Ce traitement est fondé sur notre intérêt légitime à mesurer l'audience du service (art. 6.1.f RGPD). Vous pouvez vous y opposer en nous contactant à <a href="mailto:contact@autocandidat.fr" className="text-indigo-600 hover:underline">contact@autocandidat.fr</a>.
+            </p>
+            <p className="text-sm text-gray-600">
+              Pour les utilisateurs du forfait premium, un pixel de suivi est inséré dans les emails de candidature envoyés afin de détecter si l'email a été ouvert par le destinataire (utile pour déclencher une relance automatique). Ce suivi ne concerne que les emails que vous envoyez vous-même via le service, pas votre messagerie personnelle.
             </p>
           </section>
 

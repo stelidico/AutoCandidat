@@ -63,14 +63,14 @@ const PLANS = [
 
 const FAQS = [
   { q: 'Comment fonctionne la génération de lettre ?', a: 'Notre IA analyse votre CV et la description du poste pour créer une lettre personnalisée. Elle met en avant vos compétences pertinentes, utilise des mots-clés ATS et adapte le ton selon vos préférences.' },
-  { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Votre CV et vos lettres sont stockés de façon chiffrée. Nous ne partageons jamais vos données avec des tiers. Vous pouvez supprimer votre compte et toutes vos données à tout moment.' },
+  { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Vos identifiants et jetons de connexion sont stockés de façon chiffrée. Nous ne vendons jamais vos données et ne les partageons qu\'avec les prestataires strictement nécessaires au fonctionnement du service (génération IA, paiement, envoi d\'email — voir notre politique de confidentialité). Vous pouvez supprimer votre compte et toutes vos données à tout moment.' },
   { q: 'Faut-il un abonnement pour commencer ?', a: 'Non. Vous commencez avec 10 candidatures gratuites à l\'inscription. Ensuite, achetez uniquement des crédits selon vos besoins (19,99€ pour 80 candidatures, 49,99€ pour 150 avec toutes les fonctionnalités avancées). Pas d\'abonnement imposé, sans engagement.' },
   { q: 'Puis-je envoyer des candidatures depuis ma propre adresse email ?', a: 'Oui. Vous pouvez connecter votre compte Gmail via OAuth ou configurer un compte SMTP (Orange, SFR, Outlook...) pour envoyer vos candidatures depuis votre propre adresse.' },
   { q: 'Les lettres sont-elles vraiment personnalisées ?', a: 'Oui. Chaque lettre est générée en combinant vos expériences, vos compétences spécifiques et les exigences de l\'offre. Vous pouvez ensuite l\'éditer, changer le ton ou demander une réécriture.' },
   { q: 'Dans quelles langues la lettre peut-elle être générée ?', a: 'La lettre est générée en français par défaut. Vous pouvez demander une version en anglais ou dans une autre langue en ajoutant une instruction lors de la génération (ex : "Rédige la lettre en anglais").' },
   { q: 'Puis-je modifier la lettre générée ?', a: 'Oui, vous pouvez éditer directement le texte ou demander une réécriture avec une instruction précise (ex : "Sois plus enthousiaste", "Mentionne mes 5 ans d\'expérience"). Vous pouvez régénérer à volonté.' },
   { q: 'Que se passe-t-il si je n\'utilise pas tous mes crédits ?', a: 'Vos crédits ne sont pas limités dans le temps. Ils restent disponibles indéfiniment sur votre compte, sans date d\'expiration.' },
-  { q: 'Y a-t-il une garantie de remboursement ?', a: 'Oui. Si vous n\'êtes pas satisfait dans les 7 jours suivant votre achat, contactez-nous à contact@autocandidat.fr et nous vous rembourserons intégralement, sans questions.' },
+  { q: 'Y a-t-il une garantie de remboursement ?', a: 'Les crédits achetés sont des paiements uniques et ne sont pas remboursables une fois utilisés. En cas de dysfonctionnement technique avéré empêchant l\'utilisation de vos crédits, contactez-nous à contact@autocandidat.fr : nous étudions un remboursement au prorata ou une compensation en crédits (voir nos CGV).' },
 ];
 
 // ─── Composants ───────────────────────────────────────────────────────────────
