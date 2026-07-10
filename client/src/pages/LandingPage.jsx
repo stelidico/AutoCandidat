@@ -269,6 +269,7 @@ export default function LandingPage() {
             <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ border: '3px solid rgba(255,255,255,0.3)' }}>
               <video
                 src="/Autocandidat.mp4"
+                poster="/hero-poster.jpg"
                 autoPlay
                 muted
                 loop

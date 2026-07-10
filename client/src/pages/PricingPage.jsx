@@ -1,10 +1,25 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { PRICING_PLANS } from '../data/pricingPlans';
 
+// Visiteur anonyme → simple en-tête public (logo + retour à l'accueil).
+// Utilisateur connecté → coquille de l'app (sidebar), pour rester cohérent
+// avec le reste du produit quand on vient upgrader depuis l'intérieur.
+function PublicHeader() {
+  return (
+    <div className="border-b" style={{ borderColor: '#d5cdc9' }}>
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <Link to="/" className="font-bold text-lg" style={{ color: '#379683' }}>Autocandidat</Link>
+      </div>
+    </div>
+  );
+}
+
 export default function PricingPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -22,8 +37,7 @@ export default function PricingPage() {
     }
   };
 
-  return (
-    <Layout>
+  const content = (
       <div className="max-w-4xl mx-auto py-8">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold mb-2" style={{ color: '#379683' }}>Choisissez votre formule</h1>
@@ -103,6 +117,16 @@ export default function PricingPage() {
           </button>
         </div>
       </div>
-    </Layout>
+  );
+
+  if (user) {
+    return <Layout>{content}</Layout>;
+  }
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#f5f1ef' }}>
+      <PublicHeader />
+      <div className="px-4">{content}</div>
+    </div>
   );
 }
