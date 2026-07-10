@@ -217,14 +217,25 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <Link to={user ? '/app' : '/register'}
-                className="px-7 py-3.5 text-white font-bold rounded-xl transition-colors text-base shadow-lg"
-                style={{ backgroundColor: '#3D6B7D', boxShadow: '0 4px 14px rgba(61,107,125,0.5)' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2d5566'}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#3D6B7D'}
-              >
-                {user ? 'Accéder à mon espace →' : 'Voir les forfaits →'}
-              </Link>
+              {user ? (
+                <Link to="/app"
+                  className="px-7 py-3.5 text-white font-bold rounded-xl transition-colors text-base shadow-lg"
+                  style={{ backgroundColor: '#3D6B7D', boxShadow: '0 4px 14px rgba(61,107,125,0.5)' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2d5566'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#3D6B7D'}
+                >
+                  Accéder à mon espace →
+                </Link>
+              ) : (
+                <a href="#pricing"
+                  className="px-7 py-3.5 text-white font-bold rounded-xl transition-colors text-base shadow-lg"
+                  style={{ backgroundColor: '#3D6B7D', boxShadow: '0 4px 14px rgba(61,107,125,0.5)' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2d5566'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#3D6B7D'}
+                >
+                  Voir les forfaits →
+                </a>
+              )}
               <a href="#features"
                 className="px-7 py-3.5 font-semibold rounded-xl transition-colors border-2 text-base"
                 style={{ backgroundColor: 'white', color: '#1C1C1E', borderColor: '#1C1C1E' }}
@@ -557,14 +568,14 @@ export default function LandingPage() {
           <p className="mb-8" style={{ color: '#B1A296' }}>
             Rejoignez des milliers de candidats qui utilisent Autocandidat pour décrocher leurs entretiens.
           </p>
-          <Link to="/register"
+          <a href="#pricing"
             className="inline-block px-8 py-3 font-bold rounded-xl transition-colors"
             style={{ backgroundColor: 'white', color: '#557A95' }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = '#B1A296'}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
           >
             Voir les forfaits →
-          </Link>
+          </a>
           <p className="text-xs mt-4" style={{ color: '#B1A296' }}>Sans engagement · Paiement unique</p>
         </div>
       </section>
