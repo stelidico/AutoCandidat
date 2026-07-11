@@ -116,6 +116,8 @@ const migrations = [
   "CREATE INDEX IF NOT EXISTS idx_page_views_city ON page_views(city)",
   "ALTER TABLE applications ADD COLUMN follow_up_sent_at INTEGER",
   "ALTER TABLE applications ADD COLUMN apply_method TEXT NOT NULL DEFAULT 'email'",
+  "ALTER TABLE applications ADD COLUMN reminder_at INTEGER",
+  "ALTER TABLE applications ADD COLUMN reminder_note TEXT NOT NULL DEFAULT ''",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (_) {}

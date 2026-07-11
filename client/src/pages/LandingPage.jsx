@@ -10,7 +10,7 @@ import { PRICING_PLANS } from '../data/pricingPlans';
 const FEATURES = [
   { icon: '✦', title: 'Lettre IA en 30 secondes', desc: 'Notre IA analyse votre CV et l\'offre pour générer une lettre personnalisée, sans formules génériques.' },
   { icon: '🔍', title: 'Recherche d\'offres intégrée', desc: 'Accédez à des milliers d\'offres France Travail en temps réel, avec un score de matching basé sur votre profil.' },
-  { icon: '📋', title: 'Suivi des candidatures', desc: 'Gérez votre pipeline de candidatures avec des statuts clairs : Envoyée → Entretien → Acceptée.' },
+  { icon: '📋', title: 'Suivi en tableau kanban', desc: 'Glissez-déposez vos candidatures entre les statuts (Envoyée → Entretien → Acceptée) et programmez des rappels de relance.' },
   { icon: '✉', title: 'Campagnes d\'envoi email', desc: 'Envoyez vos candidatures en masse depuis votre propre adresse email, avec votre compte Gmail ou SMTP.' },
   { icon: '📊', title: 'Score de matching CV', desc: 'Comparez votre profil à chaque offre et identifiez en un coup d\'œil les postes qui correspondent le mieux.' },
   { icon: '🎯', title: 'Personnalisation du ton', desc: 'Choisissez parmi 4 tons (Professionnel, Formel, Dynamique, Chaleureux) et régénérez à volonté.' },

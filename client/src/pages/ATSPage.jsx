@@ -20,8 +20,20 @@ function statusInfo(value) {
   return STATUSES.find((s) => s.value === value) || STATUSES[0];
 }
 
+function toLocalInputValue(unixSeconds) {
+  if (!unixSeconds) return '';
+  const d = new Date(unixSeconds * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocalInputValue(value) {
+  if (!value) return null;
+  return Math.floor(new Date(value).getTime() / 1000);
+}
+
 // ─── Modal Formulaire ─────────────────────────────────────────────────────────
-function AppForm({ initial = {}, onSave, onClose, saving }) {
+function AppForm({ initial = {}, onSave, onClose, saving, isPaid, navigate }) {
   const [form, setForm] = useState({
     company: '',
     job_title: '',
@@ -34,6 +46,8 @@ function AppForm({ initial = {}, onSave, onClose, saving }) {
     source: '',
     email_used: '',
     notes: '',
+    reminder_at: null,
+    reminder_note: '',
     ...initial,
   });
 
@@ -126,6 +140,27 @@ function AppForm({ initial = {}, onSave, onClose, saving }) {
               placeholder="Entretien le 15 mars à 14h, relancer si pas de réponse..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
+
+          {isPaid ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Rappel de relance</label>
+                <input type="datetime-local" value={toLocalInputValue(form.reminder_at)}
+                  onChange={(e) => setForm((f) => ({ ...f, reminder_at: fromLocalInputValue(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Note du rappel</label>
+                <input value={form.reminder_note} onChange={set('reminder_note')} placeholder="ex: Relancer par téléphone"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => { onClose(); navigate('/pricing'); }}
+              className="w-full text-left px-3 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-xs text-gray-400 hover:text-indigo-600 hover:border-indigo-300 transition-colors">
+              🔒 Rappels de relance — débloqué à partir du forfait 19,99€
+            </button>
+          )}
         </div>
 
         <div className="flex gap-2 pt-2">
@@ -144,12 +179,13 @@ function AppForm({ initial = {}, onSave, onClose, saving }) {
 }
 
 // ─── Carte candidature ────────────────────────────────────────────────────────
-function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate }) {
+function AppCard({ app, onEdit, onDelete, onStatusChange, onClearReminder, onPrepareInterview, isPremium, isPaid, navigate }) {
   const s = statusInfo(app.status);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const appliedDate = app.applied_at
     ? new Date(app.applied_at * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
     : null;
+  const reminderDue = app.reminder_at && app.reminder_at * 1000 <= Date.now();
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 hover:border-indigo-200 transition-colors">
@@ -199,7 +235,7 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
         </div>
       )}
 
-      {(app.source || app.email_used || (isPremium && app.email_opened_at) || (isPremium && app.follow_up_sent_at)) && (
+      {(app.source || app.email_used || (isPremium && app.email_opened_at) || (isPremium && app.follow_up_sent_at) || (isPaid && app.reminder_at)) && (
         <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
           {app.source && <span>📌 {app.source}</span>}
           {app.email_used && <span>✉ {app.email_used}</span>}
@@ -212,6 +248,13 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
           {isPremium && app.follow_up_sent_at && (
             <span className="flex items-center gap-1 text-blue-500 font-medium">
               🔔 Relancé le {new Date(app.follow_up_sent_at * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </span>
+          )}
+          {isPaid && app.reminder_at && (
+            <span className={`flex items-center gap-1 font-medium ${reminderDue ? 'text-red-600' : 'text-indigo-500'}`} title={app.reminder_note}>
+              🔔 {reminderDue ? 'À relancer le' : 'Relance prévue le'} {new Date(app.reminder_at * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              <button onClick={(e) => { e.stopPropagation(); onClearReminder(app.id); }}
+                className="ml-0.5 text-gray-300 hover:text-gray-500" title="Marquer comme fait">✕</button>
             </span>
           )}
         </div>
@@ -242,6 +285,12 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
       )}
 
       <div className="flex items-center gap-2 mt-3">
+        {app.status === 'interview' && (
+          <button onClick={() => onPrepareInterview(app)}
+            className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${isPremium ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600' : 'bg-gray-50 hover:bg-gray-100 text-gray-400'}`}>
+            {isPremium ? '🎯 Entretien' : '🔒 Entretien — 49,99€'}
+          </button>
+        )}
         <button onClick={() => onEdit(app)}
           className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-500 text-xs rounded-lg transition-colors">
           Modifier
@@ -255,11 +304,111 @@ function AppCard({ app, onEdit, onDelete, onStatusChange, isPremium, navigate })
   );
 }
 
+// ─── Modal préparation d'entretien ────────────────────────────────────────────
+function InterviewPrepModal({ app, onClose }) {
+  const [jobDescription, setJobDescription] = useState(app.notes || '');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const generate = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      let analysis = null;
+      try {
+        const raw = localStorage.getItem('ac_cv_analysis');
+        analysis = raw ? JSON.parse(raw) : null;
+      } catch { /* ignore malformed cache */ }
+      const cvText = localStorage.getItem('ac_cv_text') || '';
+      const { data } = await api.post(`/applications/${app.id}/interview-prep`, { cvText, analysis, jobDescription });
+      setResult(data);
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[90vh] sm:max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+          <div className="min-w-0">
+            <h2 className="font-bold text-gray-900">🎯 Préparer l'entretien</h2>
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{app.job_title} · {app.company}</p>
+          </div>
+          <button onClick={onClose}
+            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm font-bold transition-colors">
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {!result && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Description du poste (optionnel, améliore le résultat)</label>
+              <textarea value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} rows={5}
+                placeholder="Collez la description de l'offre pour un résultat plus précis..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+            </div>
+          )}
+
+          {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+
+          {result && (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                {result.questions.map((q, i) => (
+                  <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                    <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-indigo-500 mb-1">{q.category}</span>
+                    <p className="text-sm font-medium text-gray-800">{q.question}</p>
+                    {q.tip && <p className="text-xs text-gray-500 mt-1">💡 {q.tip}</p>}
+                  </div>
+                ))}
+              </div>
+              {result.questionsToAsk?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Questions à poser au recruteur</h3>
+                  <ul className="space-y-1.5">
+                    {result.questionsToAsk.map((q, i) => (
+                      <li key={i} className="text-sm text-gray-600 flex items-start gap-1.5">
+                        <span className="text-indigo-400">•</span>{q}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-100 shrink-0">
+          <button onClick={generate} disabled={loading}
+            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+            {loading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Génération...
+              </>
+            ) : result ? 'Régénérer' : '✦ Générer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function ATSPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isPremium = user?.plan === 'premium';
+  const isPaid = isPremium || user?.plan === 'boost';
   const [apps, setApps] = useState([]);
   const [stats, setStats] = useState({});
   const [filter, setFilter] = useState('all');
@@ -268,6 +417,8 @@ export default function ATSPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [prepApp, setPrepApp] = useState(null);
+  const [dragOverStatus, setDragOverStatus] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -328,8 +479,33 @@ export default function ATSPage() {
     }
   };
 
+  const handleClearReminder = async (id) => {
+    try {
+      const updated = await api.put(`/applications/${id}`, { clear_reminder: true });
+      setApps((prev) => prev.map((a) => (a.id === id ? updated.data : a)));
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    }
+  };
+
+  const openInterviewPrep = (app) => {
+    if (!isPremium) { navigate('/pricing'); return; }
+    setPrepApp(app);
+  };
+
   const filtered = filter === 'all' ? apps : apps.filter((a) => a.status === filter);
   const total = apps.length;
+  const dueReminders = isPaid ? apps.filter((a) => a.reminder_at && a.reminder_at * 1000 <= Date.now()) : [];
+
+  const cardProps = {
+    onDelete: handleDelete,
+    onStatusChange: handleStatusChange,
+    onClearReminder: handleClearReminder,
+    onPrepareInterview: openInterviewPrep,
+    isPremium,
+    isPaid,
+    navigate,
+  };
 
   return (
     <Layout>
@@ -352,75 +528,144 @@ export default function ATSPage() {
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
         )}
 
+        {dueReminders.length > 0 && (
+          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-700 flex items-start gap-2">
+            <span>🔔</span>
+            <span>
+              <strong>{dueReminders.length}</strong> relance{dueReminders.length > 1 ? 's' : ''} à faire :{' '}
+              {dueReminders.map((a) => `${a.company} (${a.job_title})`).join(', ')}
+            </span>
+          </div>
+        )}
+
         {/* Stats bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
           {STATUSES.filter((s) => s.value !== 'all').map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setFilter(filter === s.value ? 'all' : s.value)}
-              className={`rounded-xl p-3 text-center transition-colors border ${
-                filter === s.value
-                  ? `${s.bg} border-current ${s.color}`
-                  : 'bg-white border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className={`text-xl font-bold ${filter === s.value ? s.color : 'text-gray-800'}`}>
-                {stats[s.value] || 0}
+            isPaid ? (
+              <div key={s.value} className="rounded-xl p-3 text-center border bg-white border-gray-200">
+                <div className="text-xl font-bold text-gray-800">{stats[s.value] || 0}</div>
+                <div className="text-xs mt-0.5 text-gray-500">{s.label}</div>
               </div>
-              <div className={`text-xs mt-0.5 ${filter === s.value ? s.color : 'text-gray-500'}`}>
-                {s.label}
-              </div>
-            </button>
+            ) : (
+              <button
+                key={s.value}
+                onClick={() => setFilter(filter === s.value ? 'all' : s.value)}
+                className={`rounded-xl p-3 text-center transition-colors border ${
+                  filter === s.value
+                    ? `${s.bg} border-current ${s.color}`
+                    : 'bg-white border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className={`text-xl font-bold ${filter === s.value ? s.color : 'text-gray-800'}`}>
+                  {stats[s.value] || 0}
+                </div>
+                <div className={`text-xs mt-0.5 ${filter === s.value ? s.color : 'text-gray-500'}`}>
+                  {s.label}
+                </div>
+              </button>
+            )
           ))}
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {STATUSES.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setFilter(s.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                filter === s.value
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
-              }`}
-            >
-              {s.label}
-              {s.value !== 'all' && stats[s.value] ? ` (${stats[s.value]})` : ''}
-            </button>
-          ))}
-        </div>
-
-        {/* List */}
         {loading ? (
           <div className="text-center py-12 text-gray-400 text-sm">Chargement...</div>
-        ) : filtered.length === 0 ? (
+        ) : total === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-5xl mb-3">📋</div>
-            <p className="font-medium text-gray-500">
-              {filter === 'all' ? 'Aucune candidature' : `Aucune candidature "${statusInfo(filter).label}"`}
-            </p>
-            <p className="text-sm mt-1">
-              {filter === 'all'
-                ? 'Ajoutez votre première candidature pour commencer le suivi'
-                : 'Changez le filtre ou ajoutez une candidature'}
-            </p>
+            <p className="font-medium text-gray-500">Aucune candidature</p>
+            <p className="text-sm mt-1">Ajoutez votre première candidature pour commencer le suivi</p>
+          </div>
+        ) : isPaid ? (
+          /* ── Vue kanban (Boost et Premium) ── */
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex gap-3 min-w-max">
+              {STATUSES.filter((s) => s.value !== 'all').map((col) => {
+                const colApps = apps.filter((a) => a.status === col.value);
+                return (
+                  <div
+                    key={col.value}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverStatus(col.value); }}
+                    onDragLeave={() => setDragOverStatus((cur) => (cur === col.value ? null : cur))}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const id = e.dataTransfer.getData('text/plain');
+                      if (id) handleStatusChange(id, col.value);
+                      setDragOverStatus(null);
+                    }}
+                    className={`w-72 shrink-0 rounded-2xl p-2 space-y-2 transition-colors ${
+                      dragOverStatus === col.value ? 'bg-indigo-50 ring-2 ring-indigo-300' : 'bg-gray-100/70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                        <span className={`w-2 h-2 rounded-full ${col.dot}`}></span>
+                        {col.label}
+                      </div>
+                      <span className="text-xs text-gray-400">{stats[col.value] || 0}</span>
+                    </div>
+                    <div className="space-y-2 min-h-[48px]">
+                      {colApps.map((app) => (
+                        <div
+                          key={app.id}
+                          draggable
+                          onDragStart={(e) => e.dataTransfer.setData('text/plain', app.id)}
+                          className="cursor-grab active:cursor-grabbing"
+                        >
+                          <AppCard
+                            app={app}
+                            onEdit={(a) => { setEditingApp(a); setShowForm(true); }}
+                            {...cardProps}
+                          />
+                        </div>
+                      ))}
+                      {colApps.length === 0 && (
+                        <div className="text-center py-6 text-xs text-gray-300">Aucune</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filtered.map((app) => (
-              <AppCard
-                key={app.id}
-                app={app}
-                onEdit={(a) => { setEditingApp(a); setShowForm(true); }}
-                onDelete={handleDelete}
-                onStatusChange={handleStatusChange}
-                isPremium={isPremium}
-                navigate={navigate}
-              />
-            ))}
-          </div>
+          /* ── Vue liste (gratuit) ── */
+          <>
+            <div className="flex items-center gap-1 flex-wrap">
+              {STATUSES.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setFilter(s.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    filter === s.value
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
+                  }`}
+                >
+                  {s.label}
+                  {s.value !== 'all' && stats[s.value] ? ` (${stats[s.value]})` : ''}
+                </button>
+              ))}
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <div className="text-5xl mb-3">📋</div>
+                <p className="font-medium text-gray-500">Aucune candidature "{statusInfo(filter).label}"</p>
+                <p className="text-sm mt-1">Changez le filtre ou ajoutez une candidature</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    onEdit={(a) => { setEditingApp(a); setShowForm(true); }}
+                    {...cardProps}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -430,7 +675,13 @@ export default function ATSPage() {
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditingApp(null); }}
           saving={saving}
+          isPaid={isPaid}
+          navigate={navigate}
         />
+      )}
+
+      {prepApp && (
+        <InterviewPrepModal app={prepApp} onClose={() => setPrepApp(null)} />
       )}
     </Layout>
   );
