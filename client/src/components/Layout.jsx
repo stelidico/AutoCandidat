@@ -7,7 +7,6 @@ const navItems = [
   { to: '/', label: 'Accueil', icon: '🏠' },
   { to: '/app', label: 'CV & Lettres', icon: '✦' },
   { to: '/ats', label: 'Candidatures', icon: '📋' },
-  { to: '/companies', label: 'Entreprises', icon: '🏢' },
   { to: '/email', label: 'Comptes Email', icon: '✉' },
 ];
 

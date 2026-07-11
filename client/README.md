@@ -17,6 +17,5 @@ npm test          # Vitest + Testing Library
 - `Dashboard` (`/app`) — upload/analyse de CV, génération de lettre, candidature automatique
 - `ATSPage` (`/ats`) — suivi des candidatures envoyées
 - `EmailPage` (`/email`) — connexion Gmail OAuth2 ou compte SMTP
-- `CompaniesPage` (`/companies`) — recherche d'entreprises (API SIRENE)
 - `PricingPage`, `AccountSettingsPage`, `AdminPage` (réservé aux admins)
 

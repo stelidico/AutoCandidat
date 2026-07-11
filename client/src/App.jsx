@@ -23,7 +23,6 @@ import LegalPage from './pages/LegalPage';
 import CGUPage from './pages/CGUPage';
 import PricingPage from './pages/PricingPage';
 import AdminPage from './pages/AdminPage';
-import CompaniesPage from './pages/CompaniesPage';
 import OAuthCallback from './pages/OAuthCallback';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 
@@ -70,7 +69,6 @@ export default function App() {
           <Route path="/ats" element={<PrivateRoute><ATSPage /></PrivateRoute>} />
           <Route path="/email" element={<PrivateRoute><EmailPage /></PrivateRoute>} />
           <Route path="/accounts" element={<Navigate to="/email" replace />} />
-          <Route path="/companies" element={<PrivateRoute><CompaniesPage /></PrivateRoute>} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />

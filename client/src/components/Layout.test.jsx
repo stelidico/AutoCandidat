@@ -33,7 +33,6 @@ describe('Layout', () => {
 
     expect(await screen.findByText('CV & Lettres')).toBeInTheDocument();
     expect(screen.getByText('Candidatures')).toBeInTheDocument();
-    expect(screen.getByText('Entreprises')).toBeInTheDocument();
     expect(screen.getByText('Comptes Email')).toBeInTheDocument();
     expect(screen.queryByText('Admin')).not.toBeInTheDocument();
   });

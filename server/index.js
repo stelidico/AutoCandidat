@@ -110,7 +110,6 @@ app.use('/api/applications', require('./routes/applications'));
 app.use('/api/stripe', require('./routes/stripe'));
 app.use('/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/companies', require('./routes/companies'));
 app.use('/api/promo', require('./routes/promo'));
 app.get('/api/testimonials', (_req, res) => {
   res.json(db.prepare("SELECT * FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC").all());

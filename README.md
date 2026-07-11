@@ -34,7 +34,6 @@ npm run dev
 - **Candidature automatique** : recherche et fusion d'offres (France Travail, Adzuna, Jooble, JSearch — qui agrège Google for Jobs, incluant des offres LinkedIn/Indeed/Glassdoor), sélection des entreprises les plus pertinentes par IA, envoi en masse des candidatures avec CV joint, relance automatique à J+7 si l'email n'a pas été ouvert
 - **Comptes email** : connexion Gmail (OAuth2) ou SMTP générique (Orange, SFR, Outlook, Yahoo, etc.)
 - **ATS** : suivi des candidatures envoyées (statuts, stats)
-- **Entreprises** : recherche d'entreprises via l'API SIRENE (recherche-entreprises.api.gouv.fr)
 - **Paiement** : forfaits payants via Stripe (boost / premium)
 - **Admin** : statistiques, gestion des utilisateurs, modération des témoignages, usage IA, logs SMTP, journal d'audit
 - **RGPD** : export et suppression des données utilisateur
@@ -48,7 +47,6 @@ npm run dev
 - `GET/POST/PUT/DELETE /api/applications` (ATS)
 - `GET /api/stripe/status`, `POST /api/stripe/create-checkout-session`
 - `GET /auth/google/url`, `GET /auth/google/callback`
-- `GET /api/companies/search`
 - `GET/PATCH/DELETE /api/admin/*` (réservé aux administrateurs)
 
 ## Tests & CI

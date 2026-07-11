@@ -25,6 +25,6 @@ npm test                 # Jest + Supertest (base SQLite en mémoire)
 - `adzuna.js`, `francetravail.js`, `jooble.js`, `jsearch.js` — agrégateurs d'offres (JSearch agrège Google for Jobs, incluant LinkedIn/Indeed/Glassdoor)
 - `auth/google.js` — OAuth2 Google
 - `middleware/` — auth JWT, contrôle admin, quotas
-- `routes/` — un fichier par domaine (users, api, jobs, applications, stripe, auth, admin, companies, promo)
+- `routes/` — un fichier par domaine (users, api, jobs, applications, stripe, auth, admin, promo)
 
 Déploiement : `Dockerfile`, `Procfile`, `railway.toml`, `fly.toml` (Railway utilisé en production).
